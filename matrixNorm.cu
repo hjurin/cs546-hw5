@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
     dim3 dimGrid(ceil(N/8.0), 1);
     dim3 dimBlock(8, 1);
     printf("Computing Serially.\n");
-    matrixNormKernel<<<dimGrid, dimBlock, N, N>>>(d_A, d_B, N);
+    matrixNormKernel<<<dimGrid, dimBlock, (cudaStream_t)N, (cudaStream_t)N>>>(d_A, d_B, N);
 
     cudaMemcpy((float*)A, d_A, (N*N)*sizeof(float), cudaMemcpyDeviceToHost);
     cudaMemcpy((float*)B, d_B, (N*N)*sizeof(float), cudaMemcpyDeviceToHost);
