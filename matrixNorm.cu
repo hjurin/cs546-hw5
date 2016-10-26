@@ -156,7 +156,8 @@ int main(int argc, char **argv) {
 
     cudaMemcpy((float*)A, Ap, (N*N)*sizeof(float), cudaMemcpyDeviceToHost);
     cudaMemcpy((float*)B, Bp, (N*N)*sizeof(float), cudaMemcpyDeviceToHost);
-
+    cudaFree(Ap);
+    cudaFree(Bp);
     /* Stop Clock */
     gettimeofday(&etstop, &tzdummy);
     times(&cputstop);
@@ -199,39 +200,37 @@ __global__ void matrixNormKernel(float * Ap, float * Bp, int size) {
     int gd = gridDim.x;
     int row;
 
-    Bp[0] = 1.0;
+    float mu, sigma;
+
+    // Use of a share copy of Ap and Bp
+    __shared__ float a[8], b[8]; // will contain a part of the working column
+    for(int k=0; k < size; k++){
+        a[tx] = Ap[k * (gd * bd) + (bx * bd + tx)];
+        b[tx] = Bp[k * (gd * bd) + (bx * bd + tx)];
+    }
+
+    // Thread workload
+    mu = 0.0;
+    for (row=0; row < size; row++) {
+        mu += a[tx];
+    }
+    mu /= (float) size;
+    sigma = 0.0;
+    for (row=0; row < size; row++) {
+        sigma += powf(a[tx] - mu, 2.0);
+    }
+    sigma /= (float) size;
+    for (row=0; row < size; row++) {
+        if (sigma == 0.0)
+        b[tx] = 0.0;
+        else
+        b[tx] = (a[tx] - mu) / sigma;
+    }
     __syncthreads();
-    // float mu, sigma;
-    //
-    // // Use of a share copy of Ap and Bp
-    // __shared__ float a[8], b[8]; // will contain a part of the working column
-    // for(int k=0; k < size; k++){
-    //     a[tx] = Ap[k * (gd * bd) + (bx * bd + tx)];
-    //     b[tx] = Bp[k * (gd * bd) + (bx * bd + tx)];
-    // }
-    //
-    // // Thread workload
-    // mu = 0.0;
-    // for (row=0; row < size; row++) {
-    //     mu += a[tx];
-    // }
-    // mu /= (float) size;
-    // sigma = 0.0;
-    // for (row=0; row < size; row++) {
-    //     sigma += powf(a[tx] - mu, 2.0);
-    // }
-    // sigma /= (float) size;
-    // for (row=0; row < size; row++) {
-    //     if (sigma == 0.0)
-    //     b[tx] = 0.0;
-    //     else
-    //     b[tx] = (a[tx] - mu) / sigma;
-    // }
-    // __syncthreads();
-    //
-    // /// Copy back the normalized matrix to Bp
-    // for(int k=0; k < size; k++){
-    //     Bp[k * (gd * bd) + (bx * bd + tx)] = b[tx];
-    // }
+
+    /// Copy back the normalized matrix to Bp
+    for(int k=0; k < size; k++){
+        Bp[k * (gd * bd) + (bx * bd + tx)] = b[tx];
+    }
 
 }
