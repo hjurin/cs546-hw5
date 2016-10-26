@@ -182,7 +182,7 @@ int main(int argc, char **argv) {
 
 /* ------------------ Above Was Provided --------------------- */
 
-__global__ void matrixNormKernel(float * _A, float * _B, int size); {
+__global__ void matrixNormKernel(float * _A, float * _B, int size) {
     int tx = threadIdx.x; // col
     int bd = blockDim.x;
     int bx = blockIdx.x;
