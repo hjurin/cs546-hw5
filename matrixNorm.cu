@@ -123,27 +123,42 @@ void print_B() {
 */
 __global__ void matrixNormKernel(volatile float * _A, volatile float * _B, int size) {
     int tx = threadIdx.x; // col
+    int bd = blockDim.x;
+    int bx = blockIdx.x;
+    int gd = gridDim.x;
     int row;
 
     float mu, sigma;
 
+    // Use of a share copy of _A and _B
+    __shared__ float a[8], b[8]; // will contain a part of the working column
+    for(int k=0; k < size; k++){
+        a[tx] = _A[k * (gd * bd) + (bx * bd + tx)];
+        b[tx] = _B[k * (gd * bd) + (bx * bd + tx)];
+    }
+
+    // Thread workload
     mu = 0.0;
     for (row=0; row < size; row++) {
-        mu += _A[row][tx];
+        mu += a[tx];
     }
     mu /= (float) N;
-
     sigma = 0.0;
     for (row=0; row < size; row++) {
-        sigma += powf(_A[row][tx] - mu, 2.0);
+        sigma += powf(a[tx] - mu, 2.0);
     }
     sigma /= (float) size;
-
     for (row=0; row < size; row++) {
         if (sigma == 0.0)
-        _B[row][tx] = 0.0;
+        b[tx] = 0.0;
         else
-        _B[row][tx] = (_A[row][tx] - mu) / sigma;
+        b[tx] = (a[tx] - mu) / sigma;
+    }
+    __syncthreads();
+
+    /// Copy back the normalized matrix to _B
+    for(int k=0; k < size; k++){
+        _B[k * (gd * bd) + (bx * bd + tx)] = b[tx];
     }
 
 }
@@ -170,8 +185,8 @@ int main(int argc, char **argv) {
     gettimeofday(&etstart, &tzdummy);
 
     /* Gaussian Elimination */
-    dim3 dimGrid(N, 1);
-    dim3 dimBlock(N, 1);
+    dim3 dimGrid(N/8, 1);
+    dim3 dimBlock(8, 1);
     printf("Computing Serially.\n");
     matrixNormKernel<<<dimGrid, dimBlock>>>(A, B, N);
 
