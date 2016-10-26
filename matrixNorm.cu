@@ -142,13 +142,13 @@ int main(int argc, char **argv) {
     times(&cputstart);
 
     /* Gaussian Elimination */
-    float Ap[N][N], Bp[N][N];
+    float *Ap, *Bp;
 
     cudaMalloc((void**)&Ap, (N*N)*sizeof(float));
     cudaMalloc((void**)&Bp, (N*N)*sizeof(float));
 
-    cudaMemcpy(Ap, A, (N*N)*sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(Bp, B, (N*N)*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(Ap, (float*)A, (N*N)*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(Bp, (float*)B, (N*N)*sizeof(float), cudaMemcpyHostToDevice);
     dim3 dimGrid(N/8, 1);
     dim3 dimBlock(8, 1);
     printf("Computing Serially.\n");
