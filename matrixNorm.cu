@@ -190,6 +190,7 @@ __global__ void matrixNormKernel(float * _A, float * _B, int size) {
     int row;
 
     _B[0] = 1.0;
+    __syncthreads();
     // float mu, sigma;
     //
     // // Use of a share copy of _A and _B
