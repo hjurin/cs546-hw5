@@ -144,18 +144,19 @@ int main(int argc, char **argv) {
     /* Gaussian Elimination */
     float *d_A, *d_B;
 
-    cudaMalloc((void**)&d_A, (N*N)*sizeof(float));
-    cudaMalloc((void**)&d_B, (N*N)*sizeof(float));
-    cudaMemcpy(d_A, (float*)A, (N*N)*sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_B, (float*)B, (N*N)*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMalloc((void**)&d_A, (N * N) * sizeof(float));
+    cudaMalloc((void**)&d_B, (N * N) * sizeof(float));
+    cudaMemcpy(d_A, (float*)A, (N * N) * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, (float*)B, (N * N) * sizeof(float), cudaMemcpyHostToDevice);
 
     dim3 dimGrid(ceil(N/8.0), 1);
     dim3 dimBlock(8, 1);
     printf("Computing Serially.\n");
-    matrixNormKernel<<<dimGrid, dimBlock>>>(d_A, d_B, N);
+    size_t = N * sizeof(float);
+    matrixNormKernel<<<dimGrid, dimBlock, sharedSize, sharedSize>>>(d_A, d_B, N);
 
-    cudaMemcpy((float*)A, d_A, (N*N)*sizeof(float), cudaMemcpyDeviceToHost);
-    cudaMemcpy((float*)B, d_B, (N*N)*sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy((float*)A, d_A, (N * N) * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy((float*)B, d_B, (N * N) * sizeof(float), cudaMemcpyDeviceToHost);
     cudaFree(d_A);
     cudaFree(d_B);
     /* Stop Clock */
@@ -198,11 +199,12 @@ __global__ void matrixNormKernel(float * d_A, float * d_B, int size) {
     int bd = blockDim.x;
     int bx = blockIdx.x;
     int row;
-    const int const_size = size;
     float mu, sigma;
 
     // Use of a share copy of d_A and d_B columns
-    __shared__ float a[const_size], b[const_size]; // each thread makes a copy of a column
+    // Each thread makes a copy of a column
+    __shared__ float a[const_size];
+    __shared__ float b[const_size];
     for(row=0; row < size; row++){
         if (bx * bd + tx < size) {
             a[tx] = d_A[(row * size) + (bx * bd + tx)];
