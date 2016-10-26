@@ -189,7 +189,7 @@ __global__ void matrixNormKernel(float * _A, float * _B, int size) {
     int gd = gridDim.x;
     int row;
 
-    _B[0] = 10.0;
+    _B[0] = 1.0;
     // float mu, sigma;
     //
     // // Use of a share copy of _A and _B
