@@ -103,7 +103,7 @@ void print_inputs() {
     }
 }
 
-void print_B() {
+void printBp() {
     int row, col;
 
     if (N < 10) {
@@ -118,7 +118,7 @@ void print_B() {
 
 
 /* Prototype of the Kernel function */
-__global__ void matrixNormKernel(float * _A, float * _B, int size);
+__global__ void matrixNormKernel(float * Ap, float * Bp, int size);
 
 int main(int argc, char **argv) {
     /* Timing variables */
@@ -142,10 +142,17 @@ int main(int argc, char **argv) {
     times(&cputstart);
 
     /* Gaussian Elimination */
+    float Ap[N][N], Bp[N][N];
+
+    cudaMalloc((void**)&Ap, (N*N)*sizeof(float));
+    cudaMalloc((void**)&Bp, (N*N)*sizeof(float));
+
+    cudaMemcpy(Ap, A, (N*N)*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(Bp, B, (N*N)*sizeof(float), cudaMemcpyHostToDevice);
     dim3 dimGrid(N/8, 1);
     dim3 dimBlock(8, 1);
     printf("Computing Serially.\n");
-    matrixNormKernel<<<dimGrid, dimBlock>>>((float *)A, (float *)B, N);
+    matrixNormKernel<<<dimGrid, dimBlock>>>(Ap, Bp, N);
 
     /* Stop Clock */
     gettimeofday(&etstop, &tzdummy);
@@ -155,7 +162,7 @@ int main(int argc, char **argv) {
     usecstop = (unsigned long long)etstop.tv_sec * 1000000 + etstop.tv_usec;
 
     /* Display output */
-    print_B();
+    printBp();
 
     /* Display timing results */
     printf("\nElapsed time = %g ms.\n",
@@ -182,22 +189,22 @@ int main(int argc, char **argv) {
 
 /* ------------------ Above Was Provided --------------------- */
 
-__global__ void matrixNormKernel(float * _A, float * _B, int size) {
+__global__ void matrixNormKernel(float * Ap, float * Bp, int size) {
     int tx = threadIdx.x; // col
     int bd = blockDim.x;
     int bx = blockIdx.x;
     int gd = gridDim.x;
     int row;
 
-    _B[0] = 1.0;
+    Bp[0] = 1.0;
     __syncthreads();
     // float mu, sigma;
     //
-    // // Use of a share copy of _A and _B
+    // // Use of a share copy of Ap and Bp
     // __shared__ float a[8], b[8]; // will contain a part of the working column
     // for(int k=0; k < size; k++){
-    //     a[tx] = _A[k * (gd * bd) + (bx * bd + tx)];
-    //     b[tx] = _B[k * (gd * bd) + (bx * bd + tx)];
+    //     a[tx] = Ap[k * (gd * bd) + (bx * bd + tx)];
+    //     b[tx] = Bp[k * (gd * bd) + (bx * bd + tx)];
     // }
     //
     // // Thread workload
@@ -219,9 +226,9 @@ __global__ void matrixNormKernel(float * _A, float * _B, int size) {
     // }
     // __syncthreads();
     //
-    // /// Copy back the normalized matrix to _B
+    // /// Copy back the normalized matrix to Bp
     // for(int k=0; k < size; k++){
-    //     _B[k * (gd * bd) + (bx * bd + tx)] = b[tx];
+    //     Bp[k * (gd * bd) + (bx * bd + tx)] = b[tx];
     // }
 
 }
