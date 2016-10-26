@@ -121,7 +121,7 @@ void print_B() {
 /* Provided global variables are MAXN, N, A[][] and B[][],
 * defined in the beginning of this code.  B[][] is initialized to zeros.
 */
-__global__ void matrixNormKernel(volatile float * _A, volatile float * _B, int size) {
+__global__ void matrixNormKernel(float * _A, float * _B, int size) {
     int tx = threadIdx.x; // col
     int bd = blockDim.x;
     int bx = blockIdx.x;
@@ -142,7 +142,7 @@ __global__ void matrixNormKernel(volatile float * _A, volatile float * _B, int s
     for (row=0; row < size; row++) {
         mu += a[tx];
     }
-    mu /= (float) N;
+    mu /= (float) size;
     sigma = 0.0;
     for (row=0; row < size; row++) {
         sigma += powf(a[tx] - mu, 2.0);
@@ -183,15 +183,17 @@ int main(int argc, char **argv) {
     /* Start Clock */
     printf("\nStarting clock.\n");
     gettimeofday(&etstart, &tzdummy);
+    times(&cputstart);
 
     /* Gaussian Elimination */
     dim3 dimGrid(N/8, 1);
     dim3 dimBlock(8, 1);
     printf("Computing Serially.\n");
-    matrixNormKernel<<<dimGrid, dimBlock>>>(A, B, N);
+    matrixNormKernel<<<dimGrid, dimBlock>>>((float *)A, (float *)B, N);
 
     /* Stop Clock */
     gettimeofday(&etstop, &tzdummy);
+    times(&cputstop);
     printf("Stopped clock.\n");
     usecstart = (unsigned long long)etstart.tv_sec * 1000000 + etstart.tv_usec;
     usecstop = (unsigned long long)etstop.tv_sec * 1000000 + etstop.tv_usec;
