@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
     dim3 dimGrid(ceil(N/8.0), 1);
     dim3 dimBlock(8, 1);
     printf("Computing Serially.\n");
-    matrixNormKernel<<<dimGrid, dimBlock, (size_t)N, (size_t)N>>>(d_A, d_B, N);
+    matrixNormKernel<<<dimGrid, dimBlock, N, N>>>(d_A, d_B, N);
 
     cudaMemcpy((float*)A, d_A, (N*N)*sizeof(float), cudaMemcpyDeviceToHost);
     cudaMemcpy((float*)B, d_B, (N*N)*sizeof(float), cudaMemcpyDeviceToHost);
@@ -198,11 +198,11 @@ __global__ void matrixNormKernel(float * d_A, float * d_B, int size) {
     int bd = blockDim.x;
     int bx = blockIdx.x;
     int row;
-
+    const int const_size = size;
     float mu, sigma;
 
     // Use of a share copy of d_A and d_B columns
-    extern __shared__ float a[], b[]; // each thread makes a copy of a column
+    __shared__ float a[const_size], b[const_size]; // each thread makes a copy of a column
     for(row=0; row < size; row++){
         if (bx * bd + tx < size) {
             a[tx] = d_A[(row * size) + (bx * bd + tx)];
@@ -222,12 +222,13 @@ __global__ void matrixNormKernel(float * d_A, float * d_B, int size) {
     }
     sigma /= (float) size;
     for(row=0; row < size; row++) {
-        if (sigma == 0.0)
-        b[row] = 0.0;
-        else
-        b[row] = (a[row] - mu) / sigma;
+        if (sigma == 0.0) {
+            b[row] = 0.0;
+        }
+        else {
+            b[row] = (a[row] - mu) / sigma;
+        }
     }
-    __syncthreads();
 
     /// Copy back the normalized column to d_B
     for(row=0; row < size; row++){
