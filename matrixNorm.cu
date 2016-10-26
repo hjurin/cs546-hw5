@@ -40,7 +40,6 @@ unsigned int time_seed() {
 /* Set the program parameters from the command-line arguments */
 void parameters(int argc, char **argv) {
     int seed = 0;  /* Random seed */
-    char uid[32]; /*User name */
 
     /* Read command-line arguments */
     srand(time_seed());  /* Randomize */
@@ -116,8 +115,15 @@ void print_B() {
         }
     }
 }
-__global__ void matrixNormKernel(float * _A, float * _B, int size) {
+
+/* ------------------ Above Was Provided --------------------- */
+
+/* Provided global variables are MAXN, N, A[][] and B[][],
+* defined in the beginning of this code.  B[][] is initialized to zeros.
+*/
+__global__ void matrixNormKernel(volatile float * _A, volatile float * _B, int size) {
     int tx = threadIdx.x; // col
+    int row;
 
     float mu, sigma;
 
@@ -141,12 +147,12 @@ __global__ void matrixNormKernel(float * _A, float * _B, int size) {
     }
 
 }
+/* ------------------ Below Was Provided --------------------- */
 
 int main(int argc, char **argv) {
     /* Timing variables */
     struct timeval etstart, etstop;  /* Elapsed times using gettimeofday() */
     struct timezone tzdummy;
-    clock_t etstart2, etstop2;  /* Elapsed times using times() */
     unsigned long long usecstart, usecstop;
     struct tms cputstart, cputstop;  /* CPU times for my processes */
 
@@ -162,17 +168,15 @@ int main(int argc, char **argv) {
     /* Start Clock */
     printf("\nStarting clock.\n");
     gettimeofday(&etstart, &tzdummy);
-    etstart2 = times(&cputstart);
 
     /* Gaussian Elimination */
-    dim3 dimGrid(N / TILE_WIDTH, 1);
-    dim3 dimBlock(N / TILE_WIDTH, 1);
+    dim3 dimGrid(N, 1);
+    dim3 dimBlock(N, 1);
     printf("Computing Serially.\n");
     matrixNormKernel<<<dimGrid, dimBlock>>>(A, B, N);
 
     /* Stop Clock */
     gettimeofday(&etstop, &tzdummy);
-    etstop2 = times(&cputstop);
     printf("Stopped clock.\n");
     usecstart = (unsigned long long)etstart.tv_sec * 1000000 + etstart.tv_usec;
     usecstop = (unsigned long long)etstop.tv_sec * 1000000 + etstop.tv_usec;
@@ -202,9 +206,3 @@ int main(int argc, char **argv) {
 
     exit(0);
 }
-
-/* ------------------ Above Was Provided --------------------- */
-
-/* Provided global variables are MAXN, N, A[][] and B[][],
-* defined in the beginning of this code.  B[][] is initialized to zeros.
-*/
