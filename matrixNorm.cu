@@ -146,13 +146,16 @@ int main(int argc, char **argv) {
 
     cudaMalloc((void**)&Ap, (N*N)*sizeof(float));
     cudaMalloc((void**)&Bp, (N*N)*sizeof(float));
-
     cudaMemcpy(Ap, (float*)A, (N*N)*sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(Bp, (float*)B, (N*N)*sizeof(float), cudaMemcpyHostToDevice);
+
     dim3 dimGrid(N/8, 1);
     dim3 dimBlock(8, 1);
     printf("Computing Serially.\n");
     matrixNormKernel<<<dimGrid, dimBlock>>>(Ap, Bp, N);
+
+    cudaMemcpy((float*)A, Ap, (N*N)*sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy((float*)B, Bp, (N*N)*sizeof(float), cudaMemcpyDeviceToHost);
 
     /* Stop Clock */
     gettimeofday(&etstop, &tzdummy);
