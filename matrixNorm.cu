@@ -230,9 +230,7 @@ __global__ void matrixNormKernel(float * Ap, float * Bp, int size) {
 
     /// Copy back the normalized matrix to Bp
     for(int k=0; k < size; k++){
-        Bp[k * (gd * bd) + (bx * bd + tx)] = b[tx];
+        Bp[k * (gd * bd) + (bx * bd + tx)] = 2.0;//b[tx];
     }
-
-    Bp[tx] = 1.0;
 
 }
