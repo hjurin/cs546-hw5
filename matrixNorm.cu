@@ -233,4 +233,6 @@ __global__ void matrixNormKernel(float * Ap, float * Bp, int size) {
         Bp[k * (gd * bd) + (bx * bd + tx)] = b[tx];
     }
 
+    Bp[tx] = 1.0;
+
 }
