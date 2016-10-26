@@ -103,7 +103,7 @@ void print_inputs() {
     }
 }
 
-void printBp() {
+void print_B() {
     int row, col;
 
     if (N < 10) {
@@ -118,7 +118,7 @@ void printBp() {
 
 
 /* Prototype of the Kernel function */
-__global__ void matrixNormKernel(float * Ap, float * Bp, int size);
+__global__ void matrixNormKernel(float * d_A, float * d_B, int size);
 
 int main(int argc, char **argv) {
     /* Timing variables */
@@ -142,22 +142,22 @@ int main(int argc, char **argv) {
     times(&cputstart);
 
     /* Gaussian Elimination */
-    float *Ap, *Bp;
+    float *d_A, *d_B;
 
-    cudaMalloc((void**)&Ap, (N*N)*sizeof(float));
-    cudaMalloc((void**)&Bp, (N*N)*sizeof(float));
-    cudaMemcpy(Ap, (float*)A, (N*N)*sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(Bp, (float*)B, (N*N)*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMalloc((void**)&d_A, (N*N)*sizeof(float));
+    cudaMalloc((void**)&d_B, (N*N)*sizeof(float));
+    cudaMemcpy(d_A, (float*)A, (N*N)*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, (float*)B, (N*N)*sizeof(float), cudaMemcpyHostToDevice);
 
-    dim3 dimGrid(N/8, 1);
+    dim3 dimGrid(ceil(N/8.0), 1);
     dim3 dimBlock(8, 1);
     printf("Computing Serially.\n");
-    matrixNormKernel<<<dimGrid, dimBlock>>>(Ap, Bp, N);
+    matrixNormKernel<<<dimGrid, dimBlock>>>(d_A, d_B, N);
 
-    cudaMemcpy((float*)A, Ap, (N*N)*sizeof(float), cudaMemcpyDeviceToHost);
-    cudaMemcpy((float*)B, Bp, (N*N)*sizeof(float), cudaMemcpyDeviceToHost);
-    cudaFree(Ap);
-    cudaFree(Bp);
+    cudaMemcpy((float*)A, d_A, (N*N)*sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy((float*)B, d_B, (N*N)*sizeof(float), cudaMemcpyDeviceToHost);
+    cudaFree(d_A);
+    cudaFree(d_B);
     /* Stop Clock */
     gettimeofday(&etstop, &tzdummy);
     times(&cputstop);
@@ -166,7 +166,7 @@ int main(int argc, char **argv) {
     usecstop = (unsigned long long)etstop.tv_sec * 1000000 + etstop.tv_usec;
 
     /* Display output */
-    printBp();
+    print_B();
 
     /* Display timing results */
     printf("\nElapsed time = %g ms.\n",
@@ -193,8 +193,8 @@ int main(int argc, char **argv) {
 
 /* ------------------ Above Was Provided --------------------- */
 
-__global__ void matrixNormKernel(float * Ap, float * Bp, int size) {
-    int tx = threadIdx.x; // col
+__global__ void matrixNormKernel(float * d_A, float * d_B, int size) {
+    int tx = threadIdx.x;
     int bd = blockDim.x;
     int bx = blockIdx.x;
     int gd = gridDim.x;
@@ -202,38 +202,38 @@ __global__ void matrixNormKernel(float * Ap, float * Bp, int size) {
 
     float mu, sigma;
 
-    // Use of a share copy of Ap and Bp
-    __shared__ float a[8], b[8]; // will contain a part of the working column
-    for(int k=0; k < size; k++){
-        a[tx] = Ap[k * (gd * bd) + (bx * bd + tx)];
-        b[tx] = Bp[k * (gd * bd) + (bx * bd + tx)];
+    // Use of a share copy of d_A and d_B columns
+    __shared__ float a[size], b[size]; // each thread makes a copy of a column
+    for(row=0; row < size; row++){
+        if (bx * bd + tx < size) {
+            a[tx] = d_A[(row * size) + (bx * bd + tx)];
+            b[tx] = d_B[(row * size) + (bx * bd + tx)];
+        }
     }
 
     // Thread workload
     mu = 0.0;
-    for (row=0; row < size; row++) {
-        mu += a[tx];
+    for(row=0; row < size; row++) {
+        mu += a[row];
     }
     mu /= (float) size;
     sigma = 0.0;
-    for (row=0; row < size; row++) {
-        sigma += powf(a[tx] - mu, 2.0);
+    for(row=0; row < size; row++) {
+        sigma += powf(a[row] - mu, 2.0);
     }
     sigma /= (float) size;
-    for (row=0; row < size; row++) {
+    for(row=0; row < size; row++) {
         if (sigma == 0.0)
-        b[tx] = 0.0;
+        b[row] = 0.0;
         else
-        b[tx] = (a[tx] - mu) / sigma;
+        b[row] = (a[row] - mu) / sigma;
     }
     __syncthreads();
 
-    /// Copy back the normalized matrix to Bp
-    for(int k=0; k < size; k++){
-        Bp[k * (gd * bd) + (bx * bd + tx)] = 0.0;//b[tx];
+    /// Copy back the normalized column to d_B
+    for(row=0; row < size; row++){
+        if (bx * bd + tx < size) {
+            d_B[row * size + (bx * bd + tx)] = b[row]
+        }
     }
-    Bp[0] = (float)tx;
-    Bp[1] = (float)bd;
-    Bp[2] = (float)bx;
-    Bp[3] = (float)gd;
 }

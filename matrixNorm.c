@@ -188,16 +188,19 @@ void matrixNorm() {
     printf("Computing Serially.\n");
 
     for (col=0; col < N; col++) {
+        // Computation of mu
         mu = 0.0;
         for (row=0; row < N; row++) {
             mu += A[row][col];
         }
         mu /= (float) N;
+        // Computation of sigma
         sigma = 0.0;
         for (row=0; row < N; row++) {
             sigma += powf(A[row][col] - mu, 2.0);
         }
         sigma /= (float) N;
+        // Filling of the normalized matrix
         for (row=0; row < N; row++) {
             if (sigma == 0.0)
             B[row][col] = 0.0;
