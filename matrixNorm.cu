@@ -188,39 +188,38 @@ __global__ void matrixNormKernel(float * _A, float * _B, int size) {
     int bx = blockIdx.x;
     int gd = gridDim.x;
     int row;
-
-    float mu, sigma;
-
-    // Use of a share copy of _A and _B
-    __shared__ float a[8], b[8]; // will contain a part of the working column
-    for(int k=0; k < size; k++){
-        a[tx] = _A[k * (gd * bd) + (bx * bd + tx)];
-        b[tx] = _B[k * (gd * bd) + (bx * bd + tx)];
-    }
-
-    // Thread workload
-    mu = 0.0;
-    for (row=0; row < size; row++) {
-        mu += a[tx];
-    }
-    mu /= (float) size;
-    sigma = 0.0;
-    for (row=0; row < size; row++) {
-        sigma += powf(a[tx] - mu, 2.0);
-    }
-    sigma /= (float) size;
-    for (row=0; row < size; row++) {
-        if (sigma == 0.0)
-        b[tx] = 0.0;
-        else
-        b[tx] = (a[tx] - mu) / sigma;
-    }
-    __syncthreads();
-
-    /// Copy back the normalized matrix to _B
-    for(int k=0; k < size; k++){
-        printf("i am %d\n", k);
-        _B[k * (gd * bd) + (bx * bd + tx)] = b[tx];
-    }
+    _A[tx] = 0.0;
+    // float mu, sigma;
+    //
+    // // Use of a share copy of _A and _B
+    // __shared__ float a[8], b[8]; // will contain a part of the working column
+    // for(int k=0; k < size; k++){
+    //     a[tx] = _A[k * (gd * bd) + (bx * bd + tx)];
+    //     b[tx] = _B[k * (gd * bd) + (bx * bd + tx)];
+    // }
+    //
+    // // Thread workload
+    // mu = 0.0;
+    // for (row=0; row < size; row++) {
+    //     mu += a[tx];
+    // }
+    // mu /= (float) size;
+    // sigma = 0.0;
+    // for (row=0; row < size; row++) {
+    //     sigma += powf(a[tx] - mu, 2.0);
+    // }
+    // sigma /= (float) size;
+    // for (row=0; row < size; row++) {
+    //     if (sigma == 0.0)
+    //     b[tx] = 0.0;
+    //     else
+    //     b[tx] = (a[tx] - mu) / sigma;
+    // }
+    // __syncthreads();
+    //
+    // /// Copy back the normalized matrix to _B
+    // for(int k=0; k < size; k++){
+    //     _B[k * (gd * bd) + (bx * bd + tx)] = b[tx];
+    // }
 
 }
