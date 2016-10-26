@@ -197,13 +197,12 @@ __global__ void matrixNormKernel(float * d_A, float * d_B,const int size) {
     int tx = threadIdx.x;
     int bd = blockDim.x;
     int bx = blockIdx.x;
-    int gd = gridDim.x;
     int row;
 
     float mu, sigma;
 
     // Use of a share copy of d_A and d_B columns
-    __shared__ float a[size], b[size]; // each thread makes a copy of a column
+    extern __shared__ float a[size], b[size]; // each thread makes a copy of a column
     for(row=0; row < size; row++){
         if (bx * bd + tx < size) {
             a[tx] = d_A[(row * size) + (bx * bd + tx)];
@@ -233,7 +232,7 @@ __global__ void matrixNormKernel(float * d_A, float * d_B,const int size) {
     /// Copy back the normalized column to d_B
     for(row=0; row < size; row++){
         if (bx * bd + tx < size) {
-            d_B[row * size + (bx * bd + tx)] = b[row]
+            d_B[row * size + (bx * bd + tx)] = b[row];
         }
     }
 }
