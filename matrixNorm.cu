@@ -116,6 +116,31 @@ void print_B() {
         }
     }
 }
+__global__ void matrixNormKernel(float * _A, float * _B, int size) {
+    int tx = threadIdx.x; // col
+
+    float mu, sigma;
+
+    mu = 0.0;
+    for (row=0; row < size; row++) {
+        mu += _A[row][tx];
+    }
+    mu /= (float) N;
+
+    sigma = 0.0;
+    for (row=0; row < size; row++) {
+        sigma += powf(_A[row][tx] - mu, 2.0);
+    }
+    sigma /= (float) size;
+
+    for (row=0; row < size; row++) {
+        if (sigma == 0.0)
+        _B[row][tx] = 0.0;
+        else
+        _B[row][tx] = (_A[row][tx] - mu) / sigma;
+    }
+
+}
 
 int main(int argc, char **argv) {
     /* Timing variables */
@@ -183,28 +208,3 @@ int main(int argc, char **argv) {
 /* Provided global variables are MAXN, N, A[][] and B[][],
 * defined in the beginning of this code.  B[][] is initialized to zeros.
 */
-__global__ void matrixNormKernel(float * _A, float * _B, int size) {
-    int tx = threadIdx.x; // col
-
-    float mu, sigma;
-
-    mu = 0.0;
-    for (row=0; row < size; row++) {
-        mu += _A[row][tx];
-    }
-    mu /= (float) N;
-
-    sigma = 0.0;
-    for (row=0; row < size; row++) {
-        sigma += powf(_A[row][tx] - mu, 2.0);
-    }
-    sigma /= (float) size;
-
-    for (row=0; row < size; row++) {
-        if (sigma == 0.0)
-        _B[row][tx] = 0.0;
-        else
-        _B[row][tx] = (_A[row][tx] - mu) / sigma;
-    }
-
-}
