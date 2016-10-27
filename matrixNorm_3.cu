@@ -233,15 +233,14 @@ void gaussianElimination() {
     for (int i = 0; i < GRID_DIM; i++) {
         cudaMemcpy(d_M + i * N, (float*)M[i], N * sizeof(float), cudaMemcpyHostToDevice);
     }
-    printf("\nM =\n\t");
-    for (int row = 0; row < GRID_DIM; row++) {
-        for (int col = 0; col < N; col++) {
-            printf("%5.2f%s", M[row][col], (col < N-1) ? ", " : ";\n\t");
-        }
-    }
     muSumKernel<<<sum_dimGrid, dimBlock>>>(d_M, N);
     cudaMemcpy((float*)M, d_M, N * sizeof(float), cudaMemcpyDeviceToHost);
     cudaMemcpy(d_M, (float*)M, N * sizeof(float), cudaMemcpyHostToDevice);
+    printf("\nM =\n\t");
+    for (int col = 0; col < N; col++) {
+        printf("%5.2f%s", M[0][col], (col < N-1) ? ", " : ";\n\t");
+    }
+
     // Compute the sigmas for the whole matrix and bring them back to the first line of S
     sigmaKernel<<<dimGrid, dimBlock>>>(d_A, d_S, d_M, N);
     for (int i = 0; i < GRID_DIM; i++) {
@@ -257,6 +256,7 @@ void gaussianElimination() {
     for (int col = 0; col < N; col++) {
         printf("%1.10f%s", S[0][col], (col < N-1) ? ", " : ";\n\t");
     }
+
     // Filling of the normalized matrix
     matrixNormKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_S, d_M, N);
     /*******************************************************/
@@ -285,7 +285,6 @@ __global__ void muKernel(float * d_A, float * d_M, int size) {
             d_M[blockIdx.x * size + col] += d_A[(i + start_row) * size + col];
         }
     }
-    // d_M[threadIdx.x] = (float)blockIdx.y;
 }
 
 __global__ void muSumKernel(float * d_M, int size) {
@@ -296,7 +295,7 @@ __global__ void muSumKernel(float * d_M, int size) {
             d_M[col] += d_M[row * size + col];
         }
     }
-    d_M[col] += (float)size;
+    d_M[col] /= (float)size;
 }
 
 __global__ void sigmaKernel(float * d_A, float * d_S, float * d_M, int size) {
@@ -306,7 +305,7 @@ __global__ void sigmaKernel(float * d_A, float * d_S, float * d_M, int size) {
     // Thread workload
     for(int i=0; i < blockDim.x; i++) {
         if (col < size && i + start_row < size) {
-            d_S[i * size + col] += powf(d_A[(i + start_row) * size + col] - d_M[col], 2.0);
+            d_S[blockIdx.x * size + col] += powf(d_A[(i + start_row) * size + col] - d_M[col], 2.0);
         }
     }
 }
@@ -319,7 +318,7 @@ __global__ void sigmaSumKernel(float * d_S, int size) {
             d_S[col] += d_S[row * size + col];
         }
     }
-    d_S[col] += (float)size;
+    d_S[col] /= (float)size;
 }
 
 __global__ void matrixNormKernel(float * d_A, float * d_B, float * d_S, float * d_M, int size) {
