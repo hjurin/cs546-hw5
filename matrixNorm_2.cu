@@ -220,6 +220,8 @@ void gaussianElimination() {
         printf("%f%s", d_M[i], (i < N-1) ? ", " : ";\n\t");
         d_M[i] /= (float)N;
     }
+    cudaMemcpy((float*)M, d_M, N * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(d_M, (float*)M, N * sizeof(float), cudaMemcpyHostToDevice);
 
     // Compute the sigmas for the whole matrix
     sigmaKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_S, d_M, N);
@@ -228,16 +230,16 @@ void gaussianElimination() {
         printf("%f%s", d_S[i], (i < N-1) ? ", " : ";\n\t");
         d_S[i] /= (float)N;
     }
+    cudaMemcpy((float*)S, d_S, N * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(d_S, (float*)S, N * sizeof(float), cudaMemcpyHostToDevice);
 
     // Filling of the normalized matrix
     matrixNormKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_S, d_M, N);
 
-    // Copies back computed arrays to global arrays
+    // Copies back computed matrix
     for (int i = 0; i < N; i++) {
         cudaMemcpy((float*)B[i], d_B + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
     }
-    cudaMemcpy((float*)M, d_M, N * sizeof(float), cudaMemcpyDeviceToHost);
-    cudaMemcpy((float*)S, d_S, N * sizeof(float), cudaMemcpyDeviceToHost);
 
     // Frees all arrays copies
     cudaFree(d_A);
