@@ -147,8 +147,8 @@ int main(int argc, char **argv) {
     cudaMalloc((void**)&d_A, (N * N) * sizeof(float));
     cudaMalloc((void**)&d_B, (N * N) * sizeof(float));
     for (int i = 0; i < N; i++) {
-        cudaMemcpy(d_A, (float*)A[i], N * sizeof(float), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_B, (float*)B[i], N * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_A + i * N, (float*)A[i], N * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_B + i * N, (float*)B[i], N * sizeof(float), cudaMemcpyHostToDevice);
     }
 
     dim3 dimGrid(ceil(N/8.0), 1);
@@ -156,8 +156,8 @@ int main(int argc, char **argv) {
     printf("Computing Serially.\n");
     matrixNormKernel<<<dimGrid, dimBlock>>>(d_A, d_B, N);
     for (int i = 0; i < N; i++) {
-        cudaMemcpy((float*)A[i], d_A, (N * N) * sizeof(float), cudaMemcpyDeviceToHost);
-        cudaMemcpy((float*)B[i], d_B, (N * N) * sizeof(float), cudaMemcpyDeviceToHost);
+        cudaMemcpy((float*)A[i], d_A + i * N, (N * N) * sizeof(float), cudaMemcpyDeviceToHost);
+        cudaMemcpy((float*)B[i], d_B + i * N, (N * N) * sizeof(float), cudaMemcpyDeviceToHost);
     }
     cudaFree(d_A);
     cudaFree(d_B);
