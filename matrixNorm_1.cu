@@ -135,7 +135,7 @@ void print_time(char * seed, float time, char * prog) {
         fprintf(file, "program;size_matrix;seed;dim_grid;dim_block;time\n");
     }
     file = fopen(time_file, "a");
-    fprintf(file, "%s;%d;%s;%d;%d;%g\n", prog, N, seed, GRID_DIM, BLOCK_SIZE, time);
+    fprintf(file, "%s;%d;%s;%d;%d;%g\n", prog, N, seed, (int)GRID_DIM, (int)BLOCK_SIZE, time);
 }
 
 /* Prototype of the Kernel function */
