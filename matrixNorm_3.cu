@@ -227,15 +227,15 @@ void gaussianElimination() {
 
     // Computes mus for the whole matrix and bring them back to the first line of M
     muKernel<<<dimGrid, dimBlock>>>(d_A, d_M, N);
-    for (int i = 0; i < GRID_DIM; i++) {
-        cudaMemcpy((float*)M[i], d_M + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
-    }
-    for (int i = 0; i < GRID_DIM; i++) {
-        cudaMemcpy(d_M + i * N, (float*)M[i], N * sizeof(float), cudaMemcpyHostToDevice);
-    }
+    // for (int i = 0; i < GRID_DIM; i++) {
+    //     cudaMemcpy((float*)M[i], d_M + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
+    // }
+    // for (int i = 0; i < GRID_DIM; i++) {
+    //     cudaMemcpy(d_M + i * N, (float*)M[i], N * sizeof(float), cudaMemcpyHostToDevice);
+    // }
     muSumKernel<<<sum_dimGrid, dimBlock>>>(d_M, N);
-    cudaMemcpy((float*)M, d_M, N * sizeof(float), cudaMemcpyDeviceToHost);
-    cudaMemcpy(d_M, (float*)M, N * sizeof(float), cudaMemcpyHostToDevice);
+    // cudaMemcpy((float*)M, d_M, N * sizeof(float), cudaMemcpyDeviceToHost);
+    // cudaMemcpy(d_M, (float*)M, N * sizeof(float), cudaMemcpyHostToDevice);
     printf("\nM =\n\t");
     for (int col = 0; col < N; col++) {
         printf("%5.2f%s", M[0][col], (col < N-1) ? ", " : ";\n\t");
@@ -243,15 +243,15 @@ void gaussianElimination() {
 
     // Compute the sigmas for the whole matrix and bring them back to the first line of S
     sigmaKernel<<<dimGrid, dimBlock>>>(d_A, d_S, d_M, N);
-    for (int i = 0; i < GRID_DIM; i++) {
-        cudaMemcpy((float*)S[i], d_S + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
-    }
-    for (int i = 0; i < GRID_DIM; i++) {
-        cudaMemcpy(d_S + i * N, (float*)S[i], N * sizeof(float), cudaMemcpyHostToDevice);
-    }
+    // for (int i = 0; i < GRID_DIM; i++) {
+    //     cudaMemcpy((float*)S[i], d_S + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
+    // }
+    // for (int i = 0; i < GRID_DIM; i++) {
+    //     cudaMemcpy(d_S + i * N, (float*)S[i], N * sizeof(float), cudaMemcpyHostToDevice);
+    // }
     sigmaSumKernel<<<sum_dimGrid, dimBlock>>>(d_S, N);
-    cudaMemcpy((float*)S, d_S, N * sizeof(float), cudaMemcpyDeviceToHost);
-    cudaMemcpy(d_S, (float*)S, N * sizeof(float), cudaMemcpyHostToDevice);
+    // cudaMemcpy((float*)S, d_S, N * sizeof(float), cudaMemcpyDeviceToHost);
+    // cudaMemcpy(d_S, (float*)S, N * sizeof(float), cudaMemcpyHostToDevice);
     printf("\nS =\n\t");
     for (int col = 0; col < N; col++) {
         printf("%1.10f%s", S[0][col], (col < N-1) ? ", " : ";\n\t");
