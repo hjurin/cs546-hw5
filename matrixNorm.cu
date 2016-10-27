@@ -152,8 +152,8 @@ int main(int argc, char **argv) {
     dim3 dimGrid(ceil(N/8.0), 1);
     dim3 dimBlock(8, 1);
     printf("Computing Serially.\n");
-    cudaStream_t sharedSize = N * sizeof(float);
-    matrixNormKernel<<<dimGrid, dimBlock, sharedSize, sharedSize>>>(d_A, d_B, N);
+    // cudaStream_t sharedSize = N * sizeof(float);
+    matrixNormKernel<<<dimGrid, dimBlock>>>(d_A, d_B, N);
 
     cudaMemcpy((float*)A, d_A, (N * N) * sizeof(float), cudaMemcpyDeviceToHost);
     cudaMemcpy((float*)B, d_B, (N * N) * sizeof(float), cudaMemcpyDeviceToHost);
@@ -203,8 +203,8 @@ __global__ void matrixNormKernel(float * d_A, float * d_B, int size) {
 
     // Use of a share copy of d_A and d_B columns
     // Each thread makes a copy of a column
-    __shared__ float *a;
-    __shared__ float *b;
+    __shared__ float a[MAXN];
+    __shared__ float b[MAXN];
     for(row=0; row < size; row++){
         if (bx * bd + tx < size) {
             a[tx] = d_A[(row * size) + (bx * bd + tx)];
