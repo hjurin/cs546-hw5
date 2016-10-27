@@ -137,7 +137,7 @@ void print_B() {
 __global__ void muKernel(float * d_A, float * d_M, int size);
 __global__ void muSumKernel(float * d_M, int size);
 __global__ void sigmaKernel(float * d_A, float * d_S, float * d_M, int size);
-__global__ void sigmaSumKernel(float * d_S, float * d_M, int size);
+__global__ void sigmaSumKernel(float * d_S, int size);
 __global__ void matrixNormKernel(float * d_A, float * d_B, float * d_S, float * d_M, int size);
 void gaussianElimination();
 
