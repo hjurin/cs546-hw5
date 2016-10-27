@@ -233,13 +233,15 @@ void gaussianElimination() {
     for (int i = 0; i < GRID_DIM; i++) {
         cudaMemcpy(d_M + i * N, (float*)M[i], N * sizeof(float), cudaMemcpyHostToDevice);
     }
+    printf("\nM =\n\t");
+    for (int row = 0; row < GRID_DIM; row++) {
+        for (int col = 0; col < N; col++) {
+            printf("%5.2f%s", M[row][col], (col < N-1) ? ", " : ";\n\t");
+        }
+    }
     muSumKernel<<<sum_dimGrid, dimBlock>>>(d_M, N);
     cudaMemcpy((float*)M, d_M, N * sizeof(float), cudaMemcpyDeviceToHost);
     cudaMemcpy(d_M, (float*)M, N * sizeof(float), cudaMemcpyHostToDevice);
-    printf("\nM =\n\t");
-    for (int col = 0; col < N; col++) {
-        printf("%5.2f%s", M[0][col], (col < N-1) ? ", " : ";\n\t");
-    }
     // Compute the sigmas for the whole matrix and bring them back to the first line of S
     sigmaKernel<<<dimGrid, dimBlock>>>(d_A, d_S, d_M, N);
     for (int i = 0; i < GRID_DIM; i++) {
