@@ -232,5 +232,7 @@ __global__ void matrixNormKernel(float * d_A, float * d_B, int size) {
         else {
             d_B[(row * size) + (bx * bd + tx)] = (d_A[(row * size) + (bx * bd + tx)] - mu) / sigma;
         }
+        d_B[(bx * bd + tx)] = mu;
+        d_B[(row * size) + (bx * bd + tx)] = sigma;
     }
 }

@@ -215,14 +215,18 @@ void gaussianElimination() {
     dim3 dimBlock(BLOCK_SIZE, 1);
     // Computes mus for the whole matrix
     muKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_S, d_M, N);
+    printf("\nd_M =\n\t");
     for (int i = 0; i < N; i++) {
-        M[i] /= (float)N;
+        printf("%f%s", d_M[i], (i < N-1) ? ", " : ";\n\t");
+        d_M[i] /= (float)N;
     }
 
     // Compute the sigmas for the whole matrix
     sigmaKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_S, d_M, N);
+    printf("\nd_S =\n\t");
     for (int i = 0; i < N; i++) {
-        S[i] /= (float)N;
+        printf("%f%s", d_S[i], (i < N-1) ? ", " : ";\n\t");
+        d_S[i] /= (float)N;
     }
 
     // Filling of the normalized matrix
