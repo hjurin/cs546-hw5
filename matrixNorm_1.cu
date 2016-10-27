@@ -19,7 +19,7 @@
 #define MAXN 8000  /* Max value of N */
 int N;  /* Matrix size */
 float BLOCK_SIZE; /* Size of blocks */
-float GRID_SIZE; /* Size of the grid */
+float GRID_DIM; /* Size of the grid */
 
 /* Matrices */
 volatile float A[MAXN][MAXN], B[MAXN][MAXN];
@@ -63,8 +63,8 @@ void parameters(int argc, char **argv) {
         srand(seed);
         printf("Random seed = %i\n", seed);
     }
-    GRID_SIZE = ceil(argc >= 4 ? atof(argv[3]) : N / 8.0);
-    printf("Grid size = %f\n", GRID_SIZE);
+    GRID_DIM = N / ceil(argc >= 4 ? atof(argv[3]) : 8.0);
+    printf("Grid size = %f\n", GRID_DIM);
     BLOCK_SIZE = ceil(argc >= 5 ? atof(argv[4]) : 8.0);
     printf("Blocks size = %f\n", BLOCK_SIZE);
 
@@ -157,7 +157,7 @@ int main(int argc, char **argv) {
         cudaMemcpy(d_B + i * N, (float*)B[i], N * sizeof(float), cudaMemcpyHostToDevice);
     }
 
-    dim3 dimGrid(GRID_SIZE, 1);
+    dim3 dimGrid(GRID_DIM, 1);
     dim3 dimBlock(BLOCK_SIZE, 1);
     printf("Computing in parallel.\n");
     matrixNormKernel<<<dimGrid, dimBlock>>>(d_A, d_B, N);

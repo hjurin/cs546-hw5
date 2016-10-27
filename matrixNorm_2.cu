@@ -19,7 +19,7 @@
 #define MAXN 8000  /* Max value of N */
 int N;  /* Matrix size */
 float BLOCK_SIZE; /* Size of blocks */
-float GRID_SIZE; /* Size of the grid */
+float GRID_DIM; /* Size of the grid */
 
 /* Arrays of mu and sigma for each column*/
 volatile float M[MAXN], S[MAXN];
@@ -66,8 +66,8 @@ void parameters(int argc, char **argv) {
         srand(seed);
         printf("Random seed = %i\n", seed);
     }
-    GRID_SIZE = ceil(argc >= 4 ? atof(argv[3]) : N / 8.0);
-    printf("Grid size = %f\n", GRID_SIZE);
+    GRID_DIM = N / ceil(argc >= 4 ? atof(argv[3]) : 8.0);
+    printf("Grid size = %f\n", GRID_DIM);
     BLOCK_SIZE = ceil(argc >= 5 ? atof(argv[4]) : 8.0);
     printf("Blocks size = %f\n", BLOCK_SIZE);
 
@@ -211,26 +211,26 @@ void gaussianElimination() {
 
     // Launch Kernel functions
     printf("Computing in parallel.\n");
-    dim3 dimGrid(GRID_SIZE, 1);
+    dim3 dimGrid(GRID_DIM, 1);
     dim3 dimBlock(BLOCK_SIZE, 1);
     // Computes mus for the whole matrix
     muKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_S, d_M, N);
+    cudaMemcpy((float*)M, d_M, N * sizeof(float), cudaMemcpyDeviceToHost);
     printf("\nd_M =\n\t");
     for (int i = 0; i < N; i++) {
         printf("%f%s", d_M[i], (i < N-1) ? ", " : ";\n\t");
         d_M[i] /= (float)N;
     }
-    cudaMemcpy((float*)M, d_M, N * sizeof(float), cudaMemcpyDeviceToHost);
     cudaMemcpy(d_M, (float*)M, N * sizeof(float), cudaMemcpyHostToDevice);
 
     // Compute the sigmas for the whole matrix
     sigmaKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_S, d_M, N);
+    cudaMemcpy((float*)S, d_S, N * sizeof(float), cudaMemcpyDeviceToHost);
     printf("\nd_S =\n\t");
     for (int i = 0; i < N; i++) {
         printf("%f%s", d_S[i], (i < N-1) ? ", " : ";\n\t");
         d_S[i] /= (float)N;
     }
-    cudaMemcpy((float*)S, d_S, N * sizeof(float), cudaMemcpyDeviceToHost);
     cudaMemcpy(d_S, (float*)S, N * sizeof(float), cudaMemcpyHostToDevice);
 
     // Filling of the normalized matrix
