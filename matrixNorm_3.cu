@@ -227,27 +227,27 @@ void gaussianElimination() {
 
     // Computes mus for the whole matrix and bring them back to the first line of M
     muKernel<<<dimGrid, dimBlock>>>(d_A, d_M, N);
-    // for (int i = 0; i < GRID_DIM; i++) {
-    //     cudaMemcpy((float*)M[i], d_M + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
-    // }
-    // for (int i = 0; i < GRID_DIM; i++) {
-    //     cudaMemcpy((float*)M[i], d_M + i * N, N * sizeof(float), cudaMemcpyHostToDevice);
-    // }
+    for (int i = 0; i < GRID_DIM; i++) {
+        cudaMemcpy((float*)M[i], d_M + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
+    }
+    for (int i = 0; i < GRID_DIM; i++) {
+        cudaMemcpy((float*)M[i], d_M + i * N, N * sizeof(float), cudaMemcpyHostToDevice);
+    }
     muSumKernel<<<mu_sigma_dimGrid, dimBlock>>>(d_M, N);
-    // cudaMemcpy((float*)M, d_M, N * sizeof(float), cudaMemcpyDeviceToHost);
-    // cudaMemcpy(d_M, (float*)M, N * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy((float*)M, d_M, N * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(d_M, (float*)M, N * sizeof(float), cudaMemcpyHostToDevice);
 
     // Compute the sigmas for the whole matrix and bring them back to the first line of S
     sigmaKernel<<<dimGrid, dimBlock>>>(d_A, d_S, d_M, N);
-    // for (int i = 0; i < GRID_DIM; i++) {
-    //     cudaMemcpy((float*)S[i], d_S + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
-    // }
-    // for (int i = 0; i < GRID_DIM; i++) {
-    //     cudaMemcpy((float*)S[i], d_S + i * N, N * sizeof(float), cudaMemcpyHostToDevice);
-    // }
+    for (int i = 0; i < GRID_DIM; i++) {
+        cudaMemcpy((float*)S[i], d_S + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
+    }
+    for (int i = 0; i < GRID_DIM; i++) {
+        cudaMemcpy((float*)S[i], d_S + i * N, N * sizeof(float), cudaMemcpyHostToDevice);
+    }
     sigmaSumKernel<<<mu_sigma_dimGrid, dimBlock>>>(d_S, N);
-    // cudaMemcpy((float*)S, d_S, N * sizeof(float), cudaMemcpyDeviceToHost);
-    // cudaMemcpy(d_S, (float*)S, N * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy((float*)S, d_S, N * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(d_S, (float*)S, N * sizeof(float), cudaMemcpyHostToDevice);
 
     // Filling of the normalized matrix
     matrixNormKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_S, d_M, N);
