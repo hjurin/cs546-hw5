@@ -70,7 +70,7 @@ void parameters(int argc, char **argv) {
     BLOCK_SIZE = ceil(argc >= 5 ? atof(argv[4]) : 8.0);
     if (GRID_DIM * BLOCK_SIZE < N) {
         printf("Error: grid_dimension*blocks_size need to be greater or equal to matrix_dimension\n       or not all the matrix will be covered\n");
-        exit();
+        exit(EXIT_ERROR);
     }
 
     /* Print parameters */
