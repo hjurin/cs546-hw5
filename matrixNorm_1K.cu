@@ -50,10 +50,7 @@ void parameters(int argc, char **argv) {
     printf("Grid size = %i\n", BLOCK_SIZE);
     BLOCK_SIZE = ceil(argc >= 5 ? atof(argv[4]) : 8.0);
     printf("Blocks size = %i\n", BLOCK_SIZE);
-    if (argc >= 4) {
-        GRID_SIZE = atoi(argv[3]);
-        printf("Grid size = %i\n", GRID_SIZE);
-    }
+
     if (argc >= 3) {
         seed = atoi(argv[2]);
         srand(seed);
