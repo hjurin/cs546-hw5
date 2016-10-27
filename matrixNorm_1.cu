@@ -135,7 +135,6 @@ void print_time(char * seed, float time, char * prog) {
         fprintf(file, "program;size_matrix;seed;dim_grid;dim_block;time\n");
     }
     file = fopen(time_file, "a");
-    char current_filename[20] = __FILE__;
     fprintf(file, "%s;%d;%s;%d;%d;%g\n", prog, N, seed, GRID_DIM, BLOCK_SIZE, time);
 }
 
@@ -213,7 +212,7 @@ int main(int argc, char **argv) {
     (float)CLOCKS_PER_SEC * 1000);
     /* Contrary to the man pages, this appears not to include the parent */
     printf("--------------------------------------------\n");
-    print_time(argv[2], (float)(usecstop - usecstart)/(float)1000), argv[0])
+    print_time(argv[2], (float)(usecstop - usecstart)/(float)1000), argv[0]);
 
     exit(0);
 }
