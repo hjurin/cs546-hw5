@@ -162,7 +162,6 @@ int main(int argc, char **argv) {
     printf("Computing in parallel.\n");
     matrixNormKernel<<<dimGrid, dimBlock>>>(d_A, d_B, N);
     for (int i = 0; i < N; i++) {
-        cudaMemcpy((float*)A[i], d_A + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
         cudaMemcpy((float*)B[i], d_B + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
     }
     cudaFree(d_A);
