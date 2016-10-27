@@ -214,11 +214,12 @@ __global__ void matrixNormKernel(float * d_A, float * d_B, int size) {
     }
     sigma /= (float) size;
     for(row=0; row < size; row++) {
-        if (sigma == 0.0) {
-            d_B[(row * size) + (bx * bd + tx)] = 0.0;
-        }
-        else {
-            d_B[(row * size) + (bx * bd + tx)] = (d_A[(row * size) + (bx * bd + tx)] - mu) / sigma;
-        }
+        // if (sigma == 0.0) {
+        //     d_B[(row * size) + (bx * bd + tx)] = 0.0;
+        // }
+        // else {
+        //     d_B[(row * size) + (bx * bd + tx)] = (d_A[(row * size) + (bx * bd + tx)] - mu) / sigma;
+        // }
+        d_B[(row * size) + (bx * bd + tx)] = 1.0;
     }
 }
