@@ -47,9 +47,9 @@ void parameters(int argc, char **argv) {
     srand(time_seed());  /* Randomize */
 
     GRID_SIZE = ceil(argc >= 4 ? atof(argv[3]) : N / 8.0);
-    printf("Grid size = %i\n", BLOCK_SIZE);
+    printf("Grid size = %f\n", BLOCK_SIZE);
     BLOCK_SIZE = ceil(argc >= 5 ? atof(argv[4]) : 8.0);
-    printf("Blocks size = %i\n", BLOCK_SIZE);
+    printf("Blocks size = %f\n", BLOCK_SIZE);
 
     if (argc >= 3) {
         seed = atoi(argv[2]);
