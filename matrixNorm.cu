@@ -222,5 +222,5 @@ __global__ void matrixNormKernel(float * d_A, float * d_B, int size) {
         // }
         d_B[row] = (float)(row*size);
     }
-    // d_B[8] = (float)(bx * bd + tx);
+    d_B[9] = 12.0;
 }
