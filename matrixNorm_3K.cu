@@ -155,36 +155,8 @@ int main(int argc, char **argv) {
     gettimeofday(&etstart, &tzdummy);
     times(&cputstart);
 
-    /****************** Gaussian Elimination ******************/
-    float *d_A, *d_B, *d_M, *d_S;
-
-    cudaMalloc((void**)&d_A, (N * N) * sizeof(float));
-    cudaMalloc((void**)&d_B, (N * N) * sizeof(float));
-    cudaMalloc((void**)&d_S, N * sizeof(float));
-    cudaMalloc((void**)&d_M, N * sizeof(float));
-    for (int i = 0; i < N; i++) {
-        cudaMemcpy(d_A + i * N, (float*)A[i], N * sizeof(float), cudaMemcpyHostToDevice);
-        cudaMemcpy(d_B + i * N, (float*)B[i], N * sizeof(float), cudaMemcpyHostToDevice);
-    }
-    cudaMemcpy(d_S, (float*)S, N * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_M, (float*)M, N * sizeof(float), cudaMemcpyHostToDevice);
-
-    dim3 dimGrid(GRID_SIZE, 1);
-    dim3 dimBlock(BLOCK_SIZE, 1);
-    printf("Computing Serially.\n");
-    matrixNormKernel<<<dimGrid, dimBlock>>>(d_A, d_B, N);
-    mu /= (float) size;
-    for (int i = 0; i < N; i++) {
-        cudaMemcpy((float*)A[i], d_A + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
-        cudaMemcpy((float*)B[i], d_B + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
-    }
-    cudaMemcpy((float*)S, d_S, N * sizeof(float), cudaMemcpyDeviceToHost);
-    cudaMemcpy((float*)M, d_M, N * sizeof(float), cudaMemcpyDeviceToHost);
-    cudaFree(d_A);
-    cudaFree(d_B);
-    cudaFree(d_S);
-    cudaFree(d_M);
-    /***********************************************************/
+    /* Gaussian Elimination */
+    gaussianElimination();
 
     /* Stop Clock */
     gettimeofday(&etstop, &tzdummy);
