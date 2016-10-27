@@ -212,7 +212,7 @@ int main(int argc, char **argv) {
     (float)CLOCKS_PER_SEC * 1000);
     /* Contrary to the man pages, this appears not to include the parent */
     printf("--------------------------------------------\n");
-    print_time(argv[2] + 2, (float)(usecstop - usecstart)/(float)1000, argv[0]);
+    print_time(argv[2], (float)(usecstop - usecstart)/(float)1000, argv[0] + 2);
 
     exit(0);
 }
