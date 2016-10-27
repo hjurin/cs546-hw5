@@ -127,7 +127,7 @@ void print_time(char * seed, float time, char * prog) {
     }
     fclose(file);
     file = fopen(time_file, "a");
-    fprintf(file, "%s;%d;%s;;;%g\n", prog, N, seed, time);
+    fprintf(file, "%s;%d;%s;;;%1.3g\n", prog, N, seed, time);
 }
 
 int main(int argc, char **argv) {

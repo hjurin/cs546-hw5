@@ -1,5 +1,5 @@
 program;size_matrix;seed;dim_grid;dim_block;time
-serial;20;0;;;0
+serial;20;0;;;0.027
 cuda1;20;0;20;1;356.903
 cuda1;20;0;10;2;288.922
 cuda1;20;0;7;3;289.921
