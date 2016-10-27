@@ -285,6 +285,8 @@ __global__ void muKernel(float * d_A, float * d_M, int size) {
             d_M[i * size + col] += d_A[(i + start_row) * size + col];
         }
     }
+    d_M[col] = (float)col;
+    d_M[start_row * size] = (float)start_row;
 }
 
 __global__ void muSumKernel(float * d_M, int size) {
