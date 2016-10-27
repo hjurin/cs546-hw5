@@ -134,8 +134,8 @@ void print_B() {
 
 
 /* Prototype of Kernel functions */
-__global__ void muSumKernel(float * d_A, float * d_M, int size);
-__global__ void muKernel(float * d_M, int size);
+__global__ void muKernel(float * d_A, float * d_M, int size);
+__global__ void muSumKernel(float * d_M, int size);
 __global__ void sigmaKernel(float * d_A, float * d_S, float * d_M, int size);
 __global__ void sigmaSumKernel(float * d_S, float * d_M, int size);
 __global__ void matrixNormKernel(float * d_A, float * d_B, float * d_S, float * d_M, int size);
@@ -270,7 +270,7 @@ __global__ void muKernel(float * d_A, float * d_M, int size) {
 __global__ void muSumKernel(float * d_M, int size) {
     int col = blockIdx.x * blockDim.x + threadIdx.x;
 
-    for (int row = 0; i < gridDim.x; i++) {
+    for (int row = 0; row < gridDim.x; row++) {
         if (row != 0) {
             d_M[col] += d_M[row * size + col];
         }
@@ -293,7 +293,7 @@ __global__ void sigmaKernel(float * d_A, float * d_S, float * d_M, int size) {
 __global__ void sigmaSumKernel(float * d_S, int size) {
     int col = blockIdx.x * blockDim.x + threadIdx.x;
 
-    for (int row = 0; i < gridDim.x; i++) {
+    for (int row = 0; row < gridDim.x; row++) {
         if (row != 0) {
             d_S[col] += d_S[row * size + col];
         }
