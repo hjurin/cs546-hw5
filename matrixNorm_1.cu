@@ -63,13 +63,17 @@ void parameters(int argc, char **argv) {
         srand(seed);
     }
     BLOCK_SIZE = ceil(argc >= 4 ? atof(argv[3]) : 8.0);
+    if (!BLOCK_SIZE) {
+        printf("Blocks need to be of a size greater than zero!\n");
+        exit(0);
+    }
     GRID_DIM = ceil(N / (float)BLOCK_SIZE);
 
     /* Print parameters */
     printf("\nRandom seed = %i\n", seed);
     printf("Matrix dimension N = %i\n", N);
-    printf("Grid dim = %f\n", GRID_DIM);
-    printf("Blocks size = %f\n", BLOCK_SIZE);
+    printf("Grid dim = %d\n", GRID_DIM);
+    printf("Blocks size = %d\n", BLOCK_SIZE);
 }
 
 /* Initialize A and B*/

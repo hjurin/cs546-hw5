@@ -66,13 +66,12 @@ void parameters(int argc, char **argv) {
         seed = atoi(argv[2]);
         srand(seed);
     }
-    GRID_DIM = ceil(argc >= 4 ? N / atof(argv[3]) : N / 8.0);
-    BLOCK_SIZE = ceil(argc >= 5 ? atof(argv[4]) : 8.0);
-    if (GRID_DIM * BLOCK_SIZE < N) {
-        printf("Error: grid_dimension*blocks_size need to be greater or equal to matrix_dimension\n       or not all the matrix will be covered\n");
-        printf("Usage: %s <matrix_dimension> [random seed] [grid_dimension] [blocks size]\n", argv[0]);
-        exit(1);
+    BLOCK_SIZE = ceil(argc >= 4 ? atof(argv[3]) : 8.0);
+    if (!BLOCK_SIZE) {
+        printf("Blocks need to be of a size greater than zero!\n");
+        exit(0);
     }
+    GRID_DIM = ceil(N / (float)BLOCK_SIZE);
 
     /* Print parameters */
     printf("\nRandom seed = %i\n", seed);
