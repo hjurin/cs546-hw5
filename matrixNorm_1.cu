@@ -72,8 +72,8 @@ void parameters(int argc, char **argv) {
     /* Print parameters */
     printf("\nRandom seed = %i\n", seed);
     printf("Matrix dimension N = %i\n", N);
-    printf("Grid dim = %d\n", GRID_DIM);
-    printf("Blocks size = %d\n", BLOCK_SIZE);
+    printf("Grid dim = %d\n", (int)GRID_DIM);
+    printf("Blocks size = %d\n", (int)BLOCK_SIZE);
 }
 
 /* Initialize A and B*/
@@ -126,6 +126,18 @@ void print_B() {
     }
 }
 
+// echo elapsed time in a csv file
+void print_time(char * seed, float time, char * prog) {
+    char time_file[20] = "elapsed_times.csv";
+    FILE * file = fopen(time_file, "r");
+    if (file == NULL) { // if the file doesn't exist we create it with headers
+        file = fopen(time_file, "a");
+        fprintf(file, "program;size_matrix;seed;dim_grid;dim_block;time\n");
+    }
+    file = fopen(time_file, "a");
+    char current_filename[20] = __FILE__;
+    fprintf(file, "%s;%d;%s;%d;%d;%g\n", prog, N, seed, GRID_DIM, BLOCK_SIZE, time);
+}
 
 /* Prototype of the Kernel function */
 __global__ void matrixNormKernel(float * d_A, float * d_B, int size);
@@ -201,6 +213,7 @@ int main(int argc, char **argv) {
     (float)CLOCKS_PER_SEC * 1000);
     /* Contrary to the man pages, this appears not to include the parent */
     printf("--------------------------------------------\n");
+    print_time(argv[2], (float)(usecstop - usecstart)/(float)1000), argv[0])
 
     exit(0);
 }

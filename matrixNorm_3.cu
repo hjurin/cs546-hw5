@@ -76,8 +76,8 @@ void parameters(int argc, char **argv) {
     /* Print parameters */
     printf("\nRandom seed = %i\n", seed);
     printf("Matrix dimension N = %i\n", N);
-    printf("Grid dim = %f\n", GRID_DIM);
-    printf("Blocks size = %f\n", BLOCK_SIZE);
+    printf("Grid dim = %f\n", (int)GRID_DIM);
+    printf("Blocks size = %f\n", (int)BLOCK_SIZE);
 }
 
 /* Initialize A and B*/
