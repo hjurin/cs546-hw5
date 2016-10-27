@@ -285,7 +285,7 @@ __global__ void muKernel(float * d_A, float * d_M, int size) {
             d_M[start_row * size + col] += d_A[(i + start_row) * size + col];
         }
     }
-    d_M[threadIdx.x] = (float)blockIdx.y;
+    // d_M[threadIdx.x] = (float)blockIdx.y;
 }
 
 __global__ void muSumKernel(float * d_M, int size) {
