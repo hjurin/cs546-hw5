@@ -131,7 +131,7 @@ void print_B() {
 /* Prototype of Kernel functions */
 __global__ void muKernel(float * d_A, float * d_B, float * d_S, float * d_M, int size);
 __global__ void sigmaKernel(float * d_A, float * d_B, float * d_S, float * d_M, int size);
-__global__ void matrixNormKernel(float * d_A, float * d_B, int size);
+__global__ void matrixNormKernel(float * d_A, float * d_B, float * d_S, float * d_M, int size);
 void gaussianElimination();
 
 int main(int argc, char **argv) {
