@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
     gettimeofday(&etstart, &tzdummy);
     times(&cputstart);
 
-    /* Gaussian Elimination */
+    /****************** Gaussian Elimination ******************/
     float *d_A, *d_B;
 
     cudaMalloc((void**)&d_A, (N * N) * sizeof(float));
@@ -159,7 +159,7 @@ int main(int argc, char **argv) {
 
     dim3 dimGrid(GRID_SIZE, 1);
     dim3 dimBlock(BLOCK_SIZE, 1);
-    printf("Computing Serially.\n");
+    printf("Computing in parallel.\n");
     matrixNormKernel<<<dimGrid, dimBlock>>>(d_A, d_B, N);
     for (int i = 0; i < N; i++) {
         cudaMemcpy((float*)A[i], d_A + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
@@ -167,6 +167,8 @@ int main(int argc, char **argv) {
     }
     cudaFree(d_A);
     cudaFree(d_B);
+    /***********************************************************/
+
     /* Stop Clock */
     gettimeofday(&etstop, &tzdummy);
     times(&cputstop);
@@ -219,7 +221,9 @@ __global__ void matrixNormKernel(float * d_A, float * d_B, int size) {
     mu /= (float) size;
     sigma = 0.0;
     for(row=0; row < size; row++) {
-        sigma += powf(d_A[(row * size) + (bx * bd + tx)] - mu, 2.0);
+        if (bx * bd + tx < size) {
+            sigma += powf(d_A[(row * size) + (bx * bd + tx)] - mu, 2.0);
+        }
     }
     sigma /= (float) size;
     for(row=0; row < size; row++) {

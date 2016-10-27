@@ -18,6 +18,11 @@
 /* Program Parameters */
 #define MAXN 8000  /* Max value of N */
 int N;  /* Matrix size */
+float BLOCK_SIZE; /* Size of blocks */
+float GRID_SIZE; /* Size of the grid */
+
+/* Arrays of mu and sigma for each column*/
+volatile float M[MAXN], S[MAXN];
 
 /* Matrices */
 volatile float A[MAXN][MAXN], B[MAXN][MAXN];
@@ -44,11 +49,6 @@ void parameters(int argc, char **argv) {
     /* Read command-line arguments */
     srand(time_seed());  /* Randomize */
 
-    if (argc == 3) {
-        seed = atoi(argv[2]);
-        srand(seed);
-        printf("Random seed = %i\n", seed);
-    }
     if (argc >= 2) {
         N = atoi(argv[1]);
         if (N < 1 || N > MAXN) {
@@ -61,6 +61,15 @@ void parameters(int argc, char **argv) {
         argv[0]);
         exit(0);
     }
+    if (argc >= 3) {
+        seed = atoi(argv[2]);
+        srand(seed);
+        printf("Random seed = %i\n", seed);
+    }
+    GRID_SIZE = ceil(argc >= 4 ? atof(argv[3]) : N / 8.0);
+    printf("Grid size = %f\n", GRID_SIZE);
+    BLOCK_SIZE = ceil(argc >= 5 ? atof(argv[4]) : 8.0);
+    printf("Blocks size = %f\n", BLOCK_SIZE);
 
     /* Print parameters */
     printf("\nMatrix dimension N = %i.\n", N);
@@ -77,6 +86,8 @@ void initialize_inputs() {
             A[row][col] = (float)rand() / 32768.0;
             B[row][col] = 0.0;
         }
+        M[col] = 0.0;
+        S[col] = 0.0;
     }
     /*
     for (col = 0; col < N; col++) {
@@ -117,8 +128,11 @@ void print_B() {
 }
 
 
-/* Prototype of the Kernel function */
+/* Prototype of Kernel functions */
+__global__ void muKernel(float * d_A, float * d_B, float * d_S, float * d_M, int size);
+__global__ void sigmaKernel(float * d_A, float * d_B, float * d_S, float * d_M, int size);
 __global__ void matrixNormKernel(float * d_A, float * d_B, int size);
+void gaussianElimination();
 
 int main(int argc, char **argv) {
     /* Timing variables */
@@ -141,26 +155,37 @@ int main(int argc, char **argv) {
     gettimeofday(&etstart, &tzdummy);
     times(&cputstart);
 
-    /* Gaussian Elimination */
-    float *d_A, *d_B;
+    /****************** Gaussian Elimination ******************/
+    float *d_A, *d_B, *d_M, *d_S;
 
     cudaMalloc((void**)&d_A, (N * N) * sizeof(float));
     cudaMalloc((void**)&d_B, (N * N) * sizeof(float));
+    cudaMalloc((void**)&d_S, N * sizeof(float));
+    cudaMalloc((void**)&d_M, N * sizeof(float));
     for (int i = 0; i < N; i++) {
         cudaMemcpy(d_A + i * N, (float*)A[i], N * sizeof(float), cudaMemcpyHostToDevice);
         cudaMemcpy(d_B + i * N, (float*)B[i], N * sizeof(float), cudaMemcpyHostToDevice);
     }
+    cudaMemcpy(d_S, (float*)S, N * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_M, (float*)M, N * sizeof(float), cudaMemcpyHostToDevice);
 
-    dim3 dimGrid(ceil(N/8.0), 1);
-    dim3 dimBlock(8, 1);
+    dim3 dimGrid(GRID_SIZE, 1);
+    dim3 dimBlock(BLOCK_SIZE, 1);
     printf("Computing Serially.\n");
     matrixNormKernel<<<dimGrid, dimBlock>>>(d_A, d_B, N);
+    mu /= (float) size;
     for (int i = 0; i < N; i++) {
         cudaMemcpy((float*)A[i], d_A + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
         cudaMemcpy((float*)B[i], d_B + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
     }
+    cudaMemcpy((float*)S, d_S, N * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy((float*)M, d_M, N * sizeof(float), cudaMemcpyDeviceToHost);
     cudaFree(d_A);
     cudaFree(d_B);
+    cudaFree(d_S);
+    cudaFree(d_M);
+    /***********************************************************/
+
     /* Stop Clock */
     gettimeofday(&etstop, &tzdummy);
     times(&cputstop);
@@ -196,32 +221,89 @@ int main(int argc, char **argv) {
 
 /* ------------------ Above Was Provided --------------------- */
 
-__global__ void matrixNormKernel(float * d_A, float * d_B, int size) {
-    int tx = threadIdx.x;
-    int bd = blockDim.x;
-    int bx = blockIdx.x;
+void gaussianElimination() {
+    // designed to be copies of global arrays
+    float *d_A, *d_B, *d_M, *d_S;
+
+    // allocation and copying of global arrays
+    cudaMalloc((void**)&d_A, (N * N) * sizeof(float));
+    cudaMalloc((void**)&d_B, (N * N) * sizeof(float));
+    cudaMalloc((void**)&d_S, N * sizeof(float));
+    cudaMalloc((void**)&d_M, N * sizeof(float));
+    for (int i = 0; i < N; i++) {
+        cudaMemcpy(d_A + i * N, (float*)A[i], N * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_B + i * N, (float*)B[i], N * sizeof(float), cudaMemcpyHostToDevice);
+    }
+    cudaMemcpy(d_S, (float*)S, N * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_M, (float*)M, N * sizeof(float), cudaMemcpyHostToDevice);
+
+    // Launch Kernel functions
+    printf("Computing in parallel.\n");
+    dim3 dimGrid(GRID_SIZE, 1);
+    dim3 dimBlock(BLOCK_SIZE, 1);
+    // Computes mus for the whole matrix
+    muKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_S, d_M, N);
+    for (int i = 0; i < N; i++) {
+        M[i] /= (float)N;
+    }
+    // Compute the sigmas for the whole matrix
+    sigmaKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_S, d_M, N);
+    for (int i = 0; i < N; i++) {
+        S[i] /= (float)N;
+    }
+    // Filling of the normalized matrix
+    matrixNormKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_S, d_M, N);
+
+    // Copies back computed arrays to global arrays
+    for (int i = 0; i < N; i++) {
+        cudaMemcpy((float*)A[i], d_A + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
+        cudaMemcpy((float*)B[i], d_B + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
+    }
+    cudaMemcpy((float*)S, d_S, N * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy((float*)M, d_M, N * sizeof(float), cudaMemcpyDeviceToHost);
+
+    // Frees all arrays copies
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_S);
+    cudaFree(d_M);
+}
+
+__global__ void muKernel(float * d_A, float * d_B, float * d_S, float * d_M, int size) {
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
     int row;
-    float mu, sigma;
 
     // Thread workload
-    mu = 0.0;
     for(row=0; row < size; row++) {
-        if (bx * bd + tx < size) {
-            mu += d_A[(row * size) + (bx * bd + tx)];
+        if (col < size) {
+            d_M[col] += d_A[(row * size) + (col)];
         }
     }
-    mu /= (float) size;
-    sigma = 0.0;
+}
+
+__global__ void sigmaKernel(float * d_A, float * d_B, float * d_S, float * d_M, int size) {
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    int row;
+
+    // Thread workload
     for(row=0; row < size; row++) {
-        sigma += powf(d_A[(row * size) + (bx * bd + tx)] - mu, 2.0);
+        if (col < size) {
+            d_S[col] += powf(d_A[(row * size) + (col)] - d_M[col], 2.0);
+        }
     }
-    sigma /= (float) size;
+}
+
+__global__ void matrixNormKernel(float * d_A, float * d_B, float * d_S, float * d_M, int size) {
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    int row;
+
+    // Thread workload
     for(row=0; row < size; row++) {
-        if (sigma == 0.0) {
-            d_B[(row * size) + (bx * bd + tx)] = 0.0;
+        if (d_S[col] == 0.0) {
+            d_B[(row * size) + (col)] = 0.0;
         }
         else {
-            d_B[(row * size) + (bx * bd + tx)] = (d_A[(row * size) + (bx * bd + tx)] - mu) / sigma;
+            d_B[(row * size) + (col)] = (d_A[(row * size) + (col)] - d_M[col]) / d_S[col];
         }
     }
 }
