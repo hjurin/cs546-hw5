@@ -218,11 +218,13 @@ void gaussianElimination() {
     for (int i = 0; i < N; i++) {
         M[i] /= (float)N;
     }
+    cudaMemcpy((float*)M, d_M, N * sizeof(float), cudaMemcpyDeviceToHost);
     // Compute the sigmas for the whole matrix
     sigmaKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_S, d_M, N);
     for (int i = 0; i < N; i++) {
         S[i] /= (float)N;
     }
+    cudaMemcpy((float*)S, d_S, N * sizeof(float), cudaMemcpyDeviceToHost);
     // Filling of the normalized matrix
     matrixNormKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_S, d_M, N);
 
@@ -231,8 +233,6 @@ void gaussianElimination() {
         cudaMemcpy((float*)A[i], d_A + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
         cudaMemcpy((float*)B[i], d_B + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
     }
-    cudaMemcpy((float*)S, d_S, N * sizeof(float), cudaMemcpyDeviceToHost);
-    cudaMemcpy((float*)M, d_M, N * sizeof(float), cudaMemcpyDeviceToHost);
 
     // Frees all arrays copies
     cudaFree(d_A);
@@ -248,7 +248,7 @@ __global__ void muKernel(float * d_A, float * d_B, float * d_S, float * d_M, int
     // Thread workload
     for(row=0; row < size; row++) {
         if (col < size) {
-            d_M[col] += d_A[(row * size) + (col)];
+            d_M[col] += d_A[row * size + col];
         }
     }
 }
@@ -260,7 +260,7 @@ __global__ void sigmaKernel(float * d_A, float * d_B, float * d_S, float * d_M, 
     // Thread workload
     for(row=0; row < size; row++) {
         if (col < size) {
-            d_S[col] += powf(d_A[(row * size) + (col)] - d_M[col], 2.0);
+            d_S[col] += powf(d_A[row * size + col] - d_M[col], 2.0);
         }
     }
 }
@@ -272,10 +272,10 @@ __global__ void matrixNormKernel(float * d_A, float * d_B, float * d_S, float * 
     // Thread workload
     for(row=0; row < size; row++) {
         if (d_S[col] == 0.0) {
-            d_B[(row * size) + (col)] = 0.0;
+            d_B[(row * size) + col] = 0.0;
         }
         else {
-            d_B[(row * size) + (col)] = (d_A[(row * size) + (col)] - d_M[col]) / d_S[col];
+            d_B[row * size + col] = (d_A[row * size + col] - d_M[col]) / d_S[col];
         }
     }
 }
