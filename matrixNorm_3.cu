@@ -272,7 +272,7 @@ __global__ void muKernel(float * d_A, float * d_M, int size) {
     int start_row = blockIdx.y;
 
     // Thread workload
-    for(int i=0; i < gridDim.y; i++) {
+    for(int i=0; i < blockDim.x; i++) {
         if (col < size && i + start_row < size) {
             d_M[i * size + col] += d_A[(i + start_row) * size + col];
         }
@@ -295,7 +295,7 @@ __global__ void sigmaKernel(float * d_A, float * d_S, float * d_M, int size) {
     int start_row = blockIdx.y;
 
     // Thread workload
-    for(int i=0; i < gridDim.y; i++) {
+    for(int i=0; i < blockDim.x; i++) {
         if (col < size && i + start_row < size) {
             d_S[i * size + col] += powf(d_A[(i + start_row) * size + col] - d_M[col], 2.0);
         }
@@ -318,7 +318,7 @@ __global__ void matrixNormKernel(float * d_A, float * d_B, float * d_S, float * 
     int start_row = blockIdx.y * blockDim.x;
 
     // Thread workload
-    for(int i=0; i < gridDim.y; i++) {
+    for(int i=0; i < blockDim.x; i++) {
         if (col < size && i + start_row < size) {
             if (d_S[col] == 0.0) {
                 d_B[((i + start_row) * size) + col] = 0.0;
