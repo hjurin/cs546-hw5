@@ -276,8 +276,8 @@ void gaussianElimination() {
 /******************** Definitions of Kernel functions ********************/
 
 __global__ void muKernel(float * d_A, float * d_M, int size) {
-    int col = blockIdx.x * blockDim.x + threadIdx.x;
-    int start_row = blockIdx.y * blockDim.x;
+    int col = blockIdx.y * blockDim.x + threadIdx.x;
+    int start_row = blockIdx.x * blockDim.x;
 
     // Thread workload
     for(int i=0; i < blockDim.x; i++) {
@@ -299,8 +299,8 @@ __global__ void muSumKernel(float * d_M, int size) {
 }
 
 __global__ void sigmaKernel(float * d_A, float * d_S, float * d_M, int size) {
-    int col = blockIdx.x * blockDim.x + threadIdx.x;
-    int start_row = blockIdx.y * blockDim.x;
+    int col = blockIdx.y * blockDim.x + threadIdx.x;
+    int start_row = blockIdx.x * blockDim.x;
 
     // Thread workload
     for(int i=0; i < blockDim.x; i++) {
@@ -322,8 +322,8 @@ __global__ void sigmaSumKernel(float * d_S, int size) {
 }
 
 __global__ void matrixNormKernel(float * d_A, float * d_B, float * d_S, float * d_M, int size) {
-    int col = blockIdx.x * blockDim.x + threadIdx.x;
-    int start_row = blockIdx.y * blockDim.x;
+    int col = blockIdx.y * blockDim.x + threadIdx.x;
+    int start_row = blockIdx.x * blockDim.x;
 
     // Thread workload
     for(int i=0; i < blockDim.x; i++) {
