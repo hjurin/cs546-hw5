@@ -64,7 +64,7 @@ void parameters(int argc, char **argv) {
         printf("Random seed = %i\n", seed);
     }
     GRID_SIZE = ceil(argc >= 4 ? atof(argv[3]) : N / 8.0);
-    printf("Grid size = %f\n", BLOCK_SIZE);
+    printf("Grid size = %f\n", GRID_SIZE);
     BLOCK_SIZE = ceil(argc >= 5 ? atof(argv[4]) : 8.0);
     printf("Blocks size = %f\n", BLOCK_SIZE);
 
