@@ -43,6 +43,7 @@ unsigned int time_seed() {
 }
 
 /* Set the program parameters from the command-line arguments */
+/* Set the program parameters from the command-line arguments */
 void parameters(int argc, char **argv) {
     int seed = 0;  /* Random seed */
 
@@ -57,22 +58,26 @@ void parameters(int argc, char **argv) {
         }
     }
     else {
-        printf("Usage: %s <matrix_dimension> [random seed]\n",
+        printf("Usage: %s <matrix_dimension> [random seed] [grid_dimension] [blocks size]\n",
         argv[0]);
         exit(0);
     }
     if (argc >= 3) {
         seed = atoi(argv[2]);
         srand(seed);
-        printf("Random seed = %i\n", seed);
     }
     GRID_DIM = ceil(argc >= 4 ? N / atof(argv[3]) : N / 8.0);
-    printf("Grid size = %f\n", GRID_DIM);
     BLOCK_SIZE = ceil(argc >= 5 ? atof(argv[4]) : 8.0);
-    printf("Blocks size = %f\n", BLOCK_SIZE);
+    if (GRID_DIM * BLOCK_SIZE < N) {
+        printf("Error: grid_dimension*blocks_size need to be greater or equal to matrix_dimension\n       or not all the matrix will be covered\n");
+        exit();
+    }
 
     /* Print parameters */
-    printf("\nMatrix dimension N = %i.\n", N);
+    printf("\nRandom seed = %i\n", seed);
+    printf("Matrix dimension N = %i\n", N);
+    printf("Grid dim = %f\n", GRID_DIM);
+    printf("Blocks size = %f\n", BLOCK_SIZE);
 }
 
 /* Initialize A and B*/
