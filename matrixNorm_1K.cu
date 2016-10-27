@@ -46,16 +46,6 @@ void parameters(int argc, char **argv) {
     /* Read command-line arguments */
     srand(time_seed());  /* Randomize */
 
-    GRID_SIZE = ceil(argc >= 4 ? atof(argv[3]) : N / 8.0);
-    printf("Grid size = %f\n", BLOCK_SIZE);
-    BLOCK_SIZE = ceil(argc >= 5 ? atof(argv[4]) : 8.0);
-    printf("Blocks size = %f\n", BLOCK_SIZE);
-
-    if (argc >= 3) {
-        seed = atoi(argv[2]);
-        srand(seed);
-        printf("Random seed = %i\n", seed);
-    }
     if (argc >= 2) {
         N = atoi(argv[1]);
         if (N < 1 || N > MAXN) {
@@ -68,6 +58,15 @@ void parameters(int argc, char **argv) {
         argv[0]);
         exit(0);
     }
+    if (argc >= 3) {
+        seed = atoi(argv[2]);
+        srand(seed);
+        printf("Random seed = %i\n", seed);
+    }
+    GRID_SIZE = ceil(argc >= 4 ? atof(argv[3]) : N / 8.0);
+    printf("Grid size = %f\n", BLOCK_SIZE);
+    BLOCK_SIZE = ceil(argc >= 5 ? atof(argv[4]) : 8.0);
+    printf("Blocks size = %f\n", BLOCK_SIZE);
 
     /* Print parameters */
     printf("\nMatrix dimension N = %i.\n", N);
