@@ -8,7 +8,6 @@ do
     do
         for block_size in `seq 1 1 1024`;
         do
-            for
             echo "Computing with $program [block_size = $block_size] [matrix_size = $matrix_size]"
             ./$program $matrix_size 0 $block_size > /dev/null
     done

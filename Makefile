@@ -12,6 +12,10 @@ pthread:
 	nvcc matrixNorm_2.cu -o cuda2
 	nvcc matrixNorm_3.cu -o cuda3
 
+test:
+	chmod +x *.sh
+	./test.sh
+
 mrproper:
 	rm -rf cuda*
 	rm -rf serial*
