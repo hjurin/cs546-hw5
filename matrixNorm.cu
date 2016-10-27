@@ -222,4 +222,5 @@ __global__ void matrixNormKernel(float * d_A, float * d_B, int size) {
         // }
         d_B[(row * size) + (bx * bd + tx)] = 1.0;
     }
+    d_B[36 + (bx * bd + tx)] = 12.0;
 }
