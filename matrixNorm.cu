@@ -146,16 +146,19 @@ int main(int argc, char **argv) {
 
     cudaMalloc((void**)&d_A, (N * N) * sizeof(float));
     cudaMalloc((void**)&d_B, (N * N) * sizeof(float));
-    cudaMemcpy(d_A, (float*)A, (N * N) * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_B, (float*)B, (N * N) * sizeof(float), cudaMemcpyHostToDevice);
+    for (int i = 0; i < N; i++) {
+        cudaMemcpy(d_A, (float*)A[i], N * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_B, (float*)B[i], N * sizeof(float), cudaMemcpyHostToDevice);
+    }
 
     dim3 dimGrid(ceil(N/8.0), 1);
     dim3 dimBlock(8, 1);
     printf("Computing Serially.\n");
     matrixNormKernel<<<dimGrid, dimBlock>>>(d_A, d_B, N);
-
-    cudaMemcpy((float*)A, d_A, (N * N) * sizeof(float), cudaMemcpyDeviceToHost);
-    cudaMemcpy((float*)B, d_B, (N * N) * sizeof(float), cudaMemcpyDeviceToHost);
+    for (int i = 0; i < N; i++) {
+        cudaMemcpy((float*)A[i], d_A, (N * N) * sizeof(float), cudaMemcpyDeviceToHost);
+        cudaMemcpy((float*)B[i], d_B, (N * N) * sizeof(float), cudaMemcpyDeviceToHost);
+    }
     cudaFree(d_A);
     cudaFree(d_B);
     /* Stop Clock */
@@ -214,13 +217,11 @@ __global__ void matrixNormKernel(float * d_A, float * d_B, int size) {
     }
     sigma /= (float) size;
     for(row=0; row < size; row++) {
-        // if (sigma == 0.0) {
-        //     d_B[(row * size) + (bx * bd + tx)] = 0.0;
-        // }
-        // else {
-        //     d_B[(row * size) + (bx * bd + tx)] = (d_A[(row * size) + (bx * bd + tx)] - mu) / sigma;
-        // }
-        d_B[row] = (float)(row*size);
+        if (sigma == 0.0) {
+            d_B[(row * size) + (bx * bd + tx)] = 0.0;
+        }
+        else {
+            d_B[(row * size) + (bx * bd + tx)] = (d_A[(row * size) + (bx * bd + tx)] - mu) / sigma;
+        }
     }
-    d_B[9] = 12.0;
 }
