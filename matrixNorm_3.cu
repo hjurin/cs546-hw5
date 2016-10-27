@@ -283,9 +283,9 @@ __global__ void muKernel(float * d_A, float * d_M, int size) {
     for(int i=0; i < blockDim.x; i++) {
         if (col < size && i + start_row < size) {
             d_M[i * size + col] += d_A[(i + start_row) * size + col];
-            d_M[i * size + threadIdx.x] = (float)blockIdx.y;
         }
     }
+    d_M[threadIdx.x] = (float)blockIdx.y;
 }
 
 __global__ void muSumKernel(float * d_M, int size) {
