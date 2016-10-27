@@ -132,6 +132,18 @@ void print_B() {
     }
 }
 
+// echo elapsed time in a csv file
+void print_time(char * seed, float time, char * prog) {
+    char time_file[20] = "elapsed_times.csv";
+    FILE * file = fopen(time_file, "r");
+    if (file == NULL) { // if the file doesn't exist we create it with headers
+        file = fopen(time_file, "a");
+        fprintf(file, "program;size_matrix;seed;dim_grid;dim_block;time\n");
+    }
+    fclose(file);
+    file = fopen(time_file, "a");
+    fprintf(file, "%s;%d;%s;%d;%d;%g\n", prog, N, seed, (int)GRID_DIM, (int)BLOCK_SIZE, time);
+}
 
 /* Prototype of Kernel functions */
 __global__ void muKernel(float * d_A, float * d_M, int size);
@@ -192,6 +204,7 @@ int main(int argc, char **argv) {
     (float)CLOCKS_PER_SEC * 1000);
     /* Contrary to the man pages, this appears not to include the parent */
     printf("--------------------------------------------\n");
+    print_time(argv[2], (float)(usecstop - usecstart)/(float)1000, argv[0] + 2);
 
     exit(0);
 }
