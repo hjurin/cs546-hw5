@@ -223,7 +223,7 @@ void gaussianElimination() {
     printf("Computing in parallel.\n");
     dim3 dimGrid(GRID_DIM, GRID_DIM);
     dim3 dimBlock(BLOCK_SIZE, 1);
-    dim3 mu_sigma_dimGrid(GRID_DIM, 1);
+    dim3 sum_dimGrid(GRID_DIM, 1);
 
     // Computes mus for the whole matrix and bring them back to the first line of M
     muKernel<<<dimGrid, dimBlock>>>(d_A, d_M, N);
@@ -233,7 +233,7 @@ void gaussianElimination() {
     for (int i = 0; i < GRID_DIM; i++) {
         cudaMemcpy(d_M + i * N, (float*)M[i], N * sizeof(float), cudaMemcpyHostToDevice);
     }
-    muSumKernel<<<mu_sigma_dimGrid, dimBlock>>>(d_M, N);
+    muSumKernel<<<sum_dimGrid, dimBlock>>>(d_M, N);
     cudaMemcpy((float*)M, d_M, N * sizeof(float), cudaMemcpyDeviceToHost);
     cudaMemcpy(d_M, (float*)M, N * sizeof(float), cudaMemcpyHostToDevice);
 
@@ -245,7 +245,7 @@ void gaussianElimination() {
     for (int i = 0; i < GRID_DIM; i++) {
         cudaMemcpy(d_S + i * N, (float*)S[i], N * sizeof(float), cudaMemcpyHostToDevice);
     }
-    sigmaSumKernel<<<mu_sigma_dimGrid, dimBlock>>>(d_S, N);
+    sigmaSumKernel<<<sum_dimGrid, dimBlock>>>(d_S, N);
     cudaMemcpy((float*)S, d_S, N * sizeof(float), cudaMemcpyDeviceToHost);
     cudaMemcpy(d_S, (float*)S, N * sizeof(float), cudaMemcpyHostToDevice);
 
@@ -269,7 +269,7 @@ void gaussianElimination() {
 
 __global__ void muKernel(float * d_A, float * d_M, int size) {
     int col = blockIdx.x * blockDim.x + threadIdx.x;
-    int start_row = blockIdx.y;
+    int start_row = blockIdx.y * blockDim.x;
 
     // Thread workload
     for(int i=0; i < blockDim.x; i++) {
@@ -292,7 +292,7 @@ __global__ void muSumKernel(float * d_M, int size) {
 
 __global__ void sigmaKernel(float * d_A, float * d_S, float * d_M, int size) {
     int col = blockIdx.x * blockDim.x + threadIdx.x;
-    int start_row = blockIdx.y;
+    int start_row = blockIdx.y * blockDim.x;
 
     // Thread workload
     for(int i=0; i < blockDim.x; i++) {
