@@ -152,7 +152,6 @@ int main(int argc, char **argv) {
     dim3 dimGrid(ceil(N/8.0), 1);
     dim3 dimBlock(8, 1);
     printf("Computing Serially.\n");
-    // cudaStream_t sharedSize = N * sizeof(float);
     matrixNormKernel<<<dimGrid, dimBlock>>>(d_A, d_B, N);
 
     cudaMemcpy((float*)A, d_A, (N * N) * sizeof(float), cudaMemcpyDeviceToHost);
@@ -201,41 +200,25 @@ __global__ void matrixNormKernel(float * d_A, float * d_B, int size) {
     int row;
     float mu, sigma;
 
-    // Use of a share copy of d_A and d_B columns
-    // Each thread makes a copy of a column
-    __shared__ float a[MAXN];
-    __shared__ float b[MAXN];
-    for(row=0; row < size; row++){
-        if (bx * bd + tx < size) {
-            a[tx] = d_A[(row * size) + (bx * bd + tx)];
-            b[tx] = d_B[(row * size) + (bx * bd + tx)];
-        }
-    }
-
     // Thread workload
     mu = 0.0;
     for(row=0; row < size; row++) {
-        mu += a[row];
+        if (bx * bd + tx < size) {
+            mu += d_A[(row * size) + (bx * bd + tx)];
+        }
     }
     mu /= (float) size;
     sigma = 0.0;
     for(row=0; row < size; row++) {
-        sigma += powf(a[row] - mu, 2.0);
+        sigma += powf(d_A[(row * size) + (bx * bd + tx)] - mu, 2.0);
     }
     sigma /= (float) size;
     for(row=0; row < size; row++) {
         if (sigma == 0.0) {
-            b[row] = 0.0;
+            d_B[(row * size) + (bx * bd + tx)] = 0.0;
         }
         else {
-            b[row] = (a[row] - mu) / sigma;
-        }
-    }
-
-    /// Copy back the normalized column to d_B
-    for(row=0; row < size; row++){
-        if (bx * bd + tx < size) {
-            d_B[row * size + (bx * bd + tx)] = b[row];
+            d_B[(row * size) + (bx * bd + tx)] = (d_A[(row * size) + (bx * bd + tx)] - mu) / sigma;
         }
     }
 }
