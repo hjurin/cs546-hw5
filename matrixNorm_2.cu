@@ -225,10 +225,6 @@ void gaussianElimination() {
         M[i] /= (float)N;
     }
     cudaMemcpy(d_M, (float*)M, N * sizeof(float), cudaMemcpyHostToDevice);
-    printf("\nM =\n\t");
-    for (int col = 0; col < N; col++) {
-        printf("%5.2f%s", M[col], (col < N-1) ? ", " : ";\n\t");
-    }
 
     // Compute the sigmas for the whole matrix
     sigmaKernel<<<dimGrid, dimBlock>>>(d_A, d_S, d_M, N);
@@ -237,10 +233,6 @@ void gaussianElimination() {
         S[i] /= (float)N;
     }
     cudaMemcpy(d_S, (float*)S, N * sizeof(float), cudaMemcpyHostToDevice);
-    printf("\nS =\n\t");
-    for (int col = 0; col < N; col++) {
-        printf("%1.10f%s", S[col], (col < N-1) ? ", " : ";\n\t");
-    }
 
     // Filling of the normalized matrix
     matrixNormKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_S, d_M, N);
