@@ -70,7 +70,7 @@ void parameters(int argc, char **argv) {
     BLOCK_SIZE = ceil(argc >= 5 ? atof(argv[4]) : 8.0);
     if (GRID_DIM * BLOCK_SIZE < N) {
         printf("Error: grid_dimension*blocks_size need to be greater or equal to matrix_dimension\n       or not all the matrix will be covered\n");
-        printf("Usage: %s <matrix_dimension> [random seed] [grid_dimension] [blocks size]\n",
+        printf("Usage: %s <matrix_dimension> [random seed] [grid_dimension] [blocks size]\n", argv[0]);
         exit(1);
     }
 
