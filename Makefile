@@ -13,7 +13,7 @@ cuda:
 	nvcc matrixNorm_3.cu -o cuda3
 
 test:
-	chmod +x *.sh
+	@chmod +x *.sh
 	./test.sh
 
 mrproper:
