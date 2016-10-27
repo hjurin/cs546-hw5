@@ -216,20 +216,20 @@ void gaussianElimination() {
     // Computes mus for the whole matrix
     muKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_S, d_M, N);
     cudaMemcpy((float*)M, d_M, N * sizeof(float), cudaMemcpyDeviceToHost);
-    printf("\nd_M =\n\t");
+    printf("\nM =\n\t");
     for (int i = 0; i < N; i++) {
-        printf("%f%s", d_M[i], (i < N-1) ? ", " : ";\n\t");
-        d_M[i] /= (float)N;
+        printf("%f%s", M[i], (i < N-1) ? ", " : ";\n\t");
+        M[i] /= (float)N;
     }
     cudaMemcpy(d_M, (float*)M, N * sizeof(float), cudaMemcpyHostToDevice);
 
     // Compute the sigmas for the whole matrix
     sigmaKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_S, d_M, N);
     cudaMemcpy((float*)S, d_S, N * sizeof(float), cudaMemcpyDeviceToHost);
-    printf("\nd_S =\n\t");
+    printf("\nS =\n\t");
     for (int i = 0; i < N; i++) {
-        printf("%f%s", d_S[i], (i < N-1) ? ", " : ";\n\t");
-        d_S[i] /= (float)N;
+        printf("%f%s", S[i], (i < N-1) ? ", " : ";\n\t");
+        S[i] /= (float)N;
     }
     cudaMemcpy(d_S, (float*)S, N * sizeof(float), cudaMemcpyHostToDevice);
 
