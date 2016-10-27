@@ -134,6 +134,7 @@ void print_time(char * seed, float time, char * prog) {
         file = fopen(time_file, "a");
         fprintf(file, "program;size_matrix;seed;dim_grid;dim_block;time\n");
     }
+    fclose(file);
     file = fopen(time_file, "a");
     fprintf(file, "%s;%d;%s;%d;%d;%g\n", prog, N, seed, (int)GRID_DIM, (int)BLOCK_SIZE, time);
 }
