@@ -134,8 +134,8 @@ void print_B() {
 
 
 /* Prototype of Kernel functions */
-__global__ void muKernel(float * d_A, float * d_B, float * d_S, float * d_M, int size);
-__global__ void sigmaKernel(float * d_A, float * d_B, float * d_S, float * d_M, int size);
+__global__ void muKernel(float * d_A, float * d_M, int size);
+__global__ void sigmaKernel(float * d_A, float * d_S, float * d_M, int size);
 __global__ void matrixNormKernel(float * d_A, float * d_B, float * d_S, float * d_M, int size);
 void gaussianElimination();
 
@@ -214,12 +214,12 @@ void gaussianElimination() {
     cudaMemcpy(d_S, (float*)S, N * sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_M, (float*)M, N * sizeof(float), cudaMemcpyHostToDevice);
 
-    // Launch Kernel functions
+    /*************** Launch Kernel functions ****************/
     printf("Computing in parallel.\n");
     dim3 dimGrid(GRID_DIM, 1);
     dim3 dimBlock(BLOCK_SIZE, 1);
     // Computes mus for the whole matrix
-    muKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_S, d_M, N);
+    muKernel<<<dimGrid, dimBlock>>>(d_A, d_M, N);
     cudaMemcpy((float*)M, d_M, N * sizeof(float), cudaMemcpyDeviceToHost);
     for (int i = 0; i < N; i++) {
         M[i] /= (float)N;
@@ -227,7 +227,7 @@ void gaussianElimination() {
     cudaMemcpy(d_M, (float*)M, N * sizeof(float), cudaMemcpyHostToDevice);
 
     // Compute the sigmas for the whole matrix
-    sigmaKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_S, d_M, N);
+    sigmaKernel<<<dimGrid, dimBlock>>>(d_A, d_S, d_M, N);
     cudaMemcpy((float*)S, d_S, N * sizeof(float), cudaMemcpyDeviceToHost);
     for (int i = 0; i < N; i++) {
         S[i] /= (float)N;
@@ -236,6 +236,7 @@ void gaussianElimination() {
 
     // Filling of the normalized matrix
     matrixNormKernel<<<dimGrid, dimBlock>>>(d_A, d_B, d_S, d_M, N);
+    /*******************************************************/
 
     // Copies back computed matrix
     for (int i = 0; i < N; i++) {
@@ -249,7 +250,7 @@ void gaussianElimination() {
     cudaFree(d_M);
 }
 
-__global__ void muKernel(float * d_A, float * d_B, float * d_S, float * d_M, int size) {
+__global__ void muKernel(float * d_A, float * d_M, int size) {
     int col = blockIdx.x * blockDim.x + threadIdx.x;
     int row;
 
@@ -261,7 +262,7 @@ __global__ void muKernel(float * d_A, float * d_B, float * d_S, float * d_M, int
     }
 }
 
-__global__ void sigmaKernel(float * d_A, float * d_B, float * d_S, float * d_M, int size) {
+__global__ void sigmaKernel(float * d_A, float * d_S, float * d_M, int size) {
     int col = blockIdx.x * blockDim.x + threadIdx.x;
     int row;
 
@@ -279,11 +280,13 @@ __global__ void matrixNormKernel(float * d_A, float * d_B, float * d_S, float * 
 
     // Thread workload
     for(row=0; row < size; row++) {
-        if (d_S[col] == 0.0) {
-            d_B[(row * size) + col] = 0.0;
-        }
-        else {
-            d_B[row * size + col] = (d_A[row * size + col] - d_M[col]) / d_S[col];
+        if (col < size) {
+            if (d_S[col] == 0.0) {
+                d_B[(row * size) + col] = 0.0;
+            }
+            else {
+                d_B[row * size + col] = (d_A[row * size + col] - d_M[col]) / d_S[col];
+            }
         }
     }
 }
