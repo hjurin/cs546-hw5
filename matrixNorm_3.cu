@@ -231,7 +231,7 @@ void gaussianElimination() {
         cudaMemcpy((float*)M[i], d_M + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
     }
     for (int i = 0; i < GRID_DIM; i++) {
-        cudaMemcpy((float*)M[i], d_M + i * N, N * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_M + i * N, (float*)M[i], N * sizeof(float), cudaMemcpyHostToDevice);
     }
     muSumKernel<<<mu_sigma_dimGrid, dimBlock>>>(d_M, N);
     cudaMemcpy((float*)M, d_M, N * sizeof(float), cudaMemcpyDeviceToHost);
@@ -243,7 +243,7 @@ void gaussianElimination() {
         cudaMemcpy((float*)S[i], d_S + i * N, N * sizeof(float), cudaMemcpyDeviceToHost);
     }
     for (int i = 0; i < GRID_DIM; i++) {
-        cudaMemcpy((float*)S[i], d_S + i * N, N * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_S + i * N, (float*)S[i], N * sizeof(float), cudaMemcpyHostToDevice);
     }
     sigmaSumKernel<<<mu_sigma_dimGrid, dimBlock>>>(d_S, N);
     cudaMemcpy((float*)S, d_S, N * sizeof(float), cudaMemcpyDeviceToHost);
