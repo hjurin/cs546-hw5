@@ -1,0 +1,29 @@
+***********************************************
+* CS546 - Parallel and distributed processing *
+* Homework 5                                  *
+* Victor SAINT GUILHEM              A20385526 *
+***********************************************
+
+This repository contains all the source code for parallelizing the normalization of a matrix A.
+It also contains all tests and tests results.
+All files are described at the bottom of this README.
+
+# BUILD AND RUN
+
+A Makefile has been implemented with following commands:
+    (default)       build all solutions (including serial)
+    mrproper        delete all executables, parasite files and test results
+    test            runs solutions over different sized matrix and blocks
+                    and store their result elapsed times in elapsed_times.csv
+
+
+# FILES DESCRIPTION
+
+In all files, print_time() has been added.
+It outputs the elapsed time into the csv file.
+
+* matrixNorm                It is the original source code.
+* matrixNorm(i)             CUDA solutions
+* test_plotting.ipynb       Contains the jupyter-notebook for plotting elapsed times
+* Contents                  Contains the plots of elapsed times
+* genuine_elapsed_times.csv The used csv file. It will not be erased if you run tests.
